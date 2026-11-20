@@ -1,0 +1,47 @@
+# Render Blueprint Specification for Focus PMS Backend
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: focus-pms-backend
+    runtime: python
+    region: oregon
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MONGO_URL
+        sync: false
+        # Enter your MongoDB connection URI (e.g. from MongoDB Atlas: mongodb+srv://<user>:<password>@cluster.mongodb.net/focus_pms?retryWrites=true&w=majority)
+      - key: DB_NAME
+        value: focus_pms
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALG
+        value: HS256
+      - key: JWT_TTL_HOURS
+        value: "12"
+      - key: CORS_ORIGINS
+        value: "*"
+        # After deploying your frontend to Netlify, update this to your Netlify URL: https://<your-site>.netlify.app
+      - key: APP_PUBLIC_URL
+        sync: false
+        # Set to your Netlify frontend URL: https://<your-site>.netlify.app
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        value: kiran@focusengineering.in
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        generateValue: true
+      - key: BOOTSTRAP_ADMIN_NAME
+        value: Kiran Kulkarni
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: Focus Engineering PMS
+      - key: EMAIL_FROM_ADDRESS
+        value: onboarding@resend.dev
+

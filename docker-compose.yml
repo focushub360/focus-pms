@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: focus-pms-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: focus_pms
+    volumes:
+      - mongodb_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: focus-pms-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MONGO_URL=mongodb://mongodb:27017/focus_pms
+      - DB_NAME=focus_pms
+      - JWT_SECRET=local-development-secret-key-change-in-prod-12345
+      - CORS_ORIGINS=*
+      - APP_PUBLIC_URL=http://localhost:3000
+      - BOOTSTRAP_ADMIN_EMAIL=kiran@focusengineering.in
+      - BOOTSTRAP_ADMIN_PASSWORD=Kiran@123
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:
+

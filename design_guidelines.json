@@ -1,0 +1,201 @@
+{
+  "project_name": "Focus PMS - Sales & Marketing Performance Management System",
+  "company_name": "Focus Engineering",
+  "app_type": "hybrid_fullstack",
+  "file_extension": "js",
+  "context_type": "DASHBOARDS_AND_ADMIN_PANELS",
+  "archetype": "ORGANIC_AND_CORPORATE_PRECISION",
+  "design_philosophy": {
+    "core_principles": [
+      "Official Focus Engineering Enterprise Product aesthetic: professional, structured, clean",
+      "No unnecessary gradients, gloss, or frivolous motion; data density and clarity first",
+      "Strict compliance with official corporate palette: Deep Purple (#262262), Corporate Blue (#264494), Cyan (#51C5DC), Yellow (#EAE950), Orange (#F19A2F), Purple (#903B96), Pink (#E81B90)",
+      "Role-aware experience for 4 key personas: Management Board (DJ Sir), HOD (Manoj Mohan), User Admin (Kiran Kulkarni), Sales/Marketing Team (Kiran, Vijay, Satvinder, Kabir, Kriti, Mounika)",
+      "Indian Currency (INR - ₹) with Lakhs/Crores formatting (e.g., ₹1.25 Cr, ₹45.50 L) and configurable Financial Year (default FY 2026-27)",
+      "High density, scan-friendly grids with crisp borders and subtle neutral backgrounds (#F8F9FA)",
+      "Every interactive element and key informational field MUST include a data-testid attribute"
+    ]
+  },
+  "typography": {
+    "font_family": "Arial, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "font_weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "scale": {
+      "h1": "text-2xl lg:text-3xl font-bold tracking-tight text-slate-900",
+      "h2": "text-xl lg:text-2xl font-semibold tracking-tight text-slate-900",
+      "h3": "text-lg font-semibold text-slate-800",
+      "h4": "text-base font-semibold text-slate-800",
+      "body_large": "text-base text-slate-700 leading-relaxed",
+      "body": "text-sm text-slate-600 leading-normal",
+      "body_small": "text-xs text-slate-500",
+      "label": "text-xs font-semibold uppercase tracking-wider text-slate-500",
+      "kpi_value": "text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]",
+      "currency_symbol": "font-sans text-slate-500 mr-1"
+    }
+  },
+  "colors": {
+    "primary": {
+      "deep_purple": "#262262",
+      "corporate_blue": "#264494",
+      "cyan": "#51C5DC",
+      "yellow": "#EAE950",
+      "orange": "#F19A2F",
+      "purple": "#903B96",
+      "pink": "#E81B90"
+    },
+    "secondary": {
+      "light_purple": "#C9C7EC",
+      "light_blue": "#CBD6F2",
+      "light_cyan": "#DCF3F8",
+      "light_yellow": "#FBFBDC",
+      "light_orange": "#FCEBD5",
+      "light_purple_pink": "#ECD4EE",
+      "light_pink": "#FAD1E9"
+    },
+    "neutral": {
+      "bg_main": "#F8F9FA",
+      "bg_card": "#FFFFFF",
+      "bg_sidebar": "#262262",
+      "bg_header": "#FFFFFF",
+      "border": "#E2E8F0",
+      "border_dark": "#CBD5E1",
+      "text_dark": "#0F172A",
+      "text_muted": "#64748B",
+      "text_light": "#94A3B8"
+    },
+    "ui_application": {
+      "main_navigation": "#262262",
+      "primary_button": "#264494",
+      "primary_button_hover": "#1E3576",
+      "active_nav_state": "#264494",
+      "active_tab_border": "#264494",
+      "dashboard_highlight": "#51C5DC",
+      "chart_palette": ["#262262", "#264494", "#51C5DC", "#F19A2F", "#903B96", "#E81B90", "#EAE950"],
+      "secondary_card_bg": "#DCF3F8",
+      "status_indicators": {
+        "won": "#10B981",
+        "in_progress": "#51C5DC",
+        "pipeline": "#264494",
+        "at_risk": "#F19A2F",
+        "lost": "#EF4444"
+      }
+    }
+  },
+  "layout_and_structure": {
+    "navigation_sidebar": {
+      "bg_color": "#262262",
+      "width": "w-64",
+      "collapsed_width": "w-16",
+      "logo_container": "h-16 flex items-center px-4 bg-[#1e1a4f] border-b border-[#342f7c]",
+      "brand_wordmark": "Focus Engineering PMS",
+      "gear_icon_colors": "Deep Purple & Cyan SVG gear element",
+      "nav_item_style": "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+      "active_item_style": "bg-[#264494] text-white shadow-sm font-semibold",
+      "inactive_item_style": "text-slate-200 hover:bg-[#322d7a] hover:text-white"
+    },
+    "header_bar": {
+      "height": "h-16",
+      "bg_color": "#FFFFFF",
+      "border": "border-b border-slate-200",
+      "elements": [
+        "Persona / Role Switcher dropdown (Management Board, HOD, Admin, Contributor)",
+        "Financial Year Selector (FY 2026-27, FY 2025-26)",
+        "Quick Action Search",
+        "Notification Bell",
+        "Current User Profile menu (Kiran Kulkarni / DJ Sir / Manoj Mohan)"
+      ]
+    },
+    "content_grid": {
+      "container_padding": "p-6 lg:p-8 space-y-6",
+      "kpi_grid": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6",
+      "chart_grid": "grid grid-cols-1 lg:grid-cols-12 gap-6",
+      "table_container": "bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+    }
+  },
+  "components_and_ui_patterns": {
+    "buttons": {
+      "primary": "bg-[#264494] hover:bg-[#1e3576] text-white font-medium px-4 py-2 rounded-md shadow-sm transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-[#51C5DC]",
+      "secondary": "bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-2 rounded-md shadow-sm transition-colors text-sm",
+      "accent": "bg-[#51C5DC] hover:bg-[#3db3cb] text-[#262262] font-semibold px-4 py-2 rounded-md transition-colors text-sm",
+      "danger": "bg-rose-600 hover:bg-rose-700 text-white font-medium px-4 py-2 rounded-md text-sm"
+    },
+    "kpi_cards": {
+      "wrapper": "bg-white border border-slate-200 rounded-lg p-5 shadow-sm hover:border-[#51C5DC] transition-all relative overflow-hidden",
+      "accent_bar": "absolute top-0 left-0 right-0 h-1 bg-[#264494]",
+      "title": "text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1",
+      "value": "text-2xl lg:text-3xl font-bold text-[#262262]",
+      "subtext": "text-xs text-slate-500 mt-2 flex items-center gap-1"
+    },
+    "tables": {
+      "wrapper": "w-full text-left border-collapse",
+      "header_row": "bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider",
+      "header_cell": "px-4 py-3",
+      "body_row": "border-b border-slate-100 hover:bg-slate-50/80 transition-colors text-sm text-slate-700",
+      "body_cell": "px-4 py-3.5"
+    },
+    "forms_and_modals": {
+      "input": "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-[#264494] focus:outline-none focus:ring-1 focus:ring-[#264494]",
+      "select": "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#264494] focus:outline-none focus:ring-1 focus:ring-[#264494]",
+      "modal_overlay": "fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4",
+      "modal_content": "bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 p-6"
+    }
+  },
+  "persona_views": {
+    "management_board": {
+      "persona_name": "Management Board Executive View (DJ Sir)",
+      "focus": "High-level aggregate sales performance, revenue against target, department conversion rates, campaign ROI, regional breakdown, strategic growth KPIs."
+    },
+    "hod": {
+      "persona_name": "Head of Department View (Manoj Mohan)",
+      "focus": "Team-wide KPI performance, pipeline health, target completion by sales contributor, sales split approvals, campaign lead allocations."
+    },
+    "admin": {
+      "persona_name": "User Onboarding & Access Admin (Kiran Kulkarni)",
+      "focus": "User management, invite employee via email, role & module permission matrix, team structural assignment, activation/deactivation, audit logging."
+    },
+    "contributor": {
+      "persona_name": "Sales & Marketing Contributor View (Integrated Team)",
+      "focus": "Personal sales quota & activity KPIs, active lead & opportunity pipeline, primary vs supporting contribution split, content calendar, follow-up logs."
+    }
+  },
+  "team_members": [
+    { "name": "DJ Sir", "role": "Management Board", "email": "dj.sir@focusengineering.com" },
+    { "name": "Manoj Mohan", "role": "Head of Department (HOD)", "email": "manoj.mohan@focusengineering.com" },
+    { "name": "Kiran Kulkarni", "role": "Super Admin & Sales/Marketing Contributor", "email": "kiran.kulkarni@focusengineering.com", "is_super_admin": true },
+    { "name": "Vijay", "role": "Sales & Marketing Contributor", "email": "vijay@focusengineering.com" },
+    { "name": "Satvinder", "role": "Sales & Marketing Contributor", "email": "satvinder@focusengineering.com" },
+    { "name": "Kabir", "role": "Sales & Marketing Contributor", "email": "kabir@focusengineering.com" },
+    { "name": "Kriti", "role": "Sales & Marketing Contributor", "email": "kriti@focusengineering.com" },
+    { "name": "Mounika", "role": "Sales & Marketing Contributor", "email": "mounika@focusengineering.com" }
+  ],
+  "image_urls": [
+    {
+      "category": "user_avatars",
+      "name": "Kiran Kulkarni (Admin / Lead)",
+      "url": "https://images.unsplash.com/photo-1589386417686-0d34b5903d23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMGNvcnBvcmF0ZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc5MzQ0NDk3M3ww&ixlib=rb-4.1.0&q=85"
+    },
+    {
+      "category": "user_avatars",
+      "name": "Vijay / Executive",
+      "url": "https://images.unsplash.com/photo-1648448942225-7aa06c7e8f79?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHw0fHxpbmRpYW4lMjBidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMGNvcnBvcmF0ZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc5MzQ0NDk3M3ww&ixlib=rb-4.1.0&q=85"
+    },
+    {
+      "category": "user_avatars",
+      "name": "Manoj Mohan / DJ Sir",
+      "url": "https://images.unsplash.com/photo-1778692258270-bc0e80e975c0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwzfHxpbmRpYW4lMjBidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMGNvcnBvcmF0ZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc5MzQ0NDk3M3ww&ixlib=rb-4.1.0&q=85"
+    },
+    {
+      "category": "user_avatars",
+      "name": "Kriti / Mounika",
+      "url": "https://images.unsplash.com/photo-1637589267610-6c66fc2a086b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBidXNpbmVzc3dvbWFuJTIwZXhlY3V0aXZlJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzkzNDQ0OTc3fDA&ixlib=rb-4.1.0&q=85"
+    }
+  ],
+  "testing_requirements": {
+    "data_testid_policy": "Mandatory data-testid on all interactive buttons, inputs, tabs, role switches, filters, metrics cards, table rows, and modals.",
+    "naming_convention": "kebab-case role-based attributes e.g., data-testid='login-submit-button', data-testid='persona-switcher-select', data-testid='opportunity-split-slider'"
+  }
+}
