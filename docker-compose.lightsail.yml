@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: focus-pms-backend
+    restart: always
+    environment:
+      - PORT=8000
+      - MONGO_URL=${MONGO_URL}
+      - DB_NAME=${DB_NAME:-focus_pms}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALG=${JWT_ALG:-HS256}
+      - JWT_TTL_HOURS=${JWT_TTL_HOURS:-12}
+      - CORS_ORIGINS=*
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-http://localhost}
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-kiran@focusengineering.in}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:-Kiran@123}
+      - BOOTSTRAP_ADMIN_NAME=${BOOTSTRAP_ADMIN_NAME:-Kiran Kulkarni}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Focus Engineering PMS}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-onboarding@resend.dev}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: focus-pms-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy

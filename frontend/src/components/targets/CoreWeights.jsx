@@ -8,7 +8,7 @@ export default function CoreWeights({ uid, rows, onSaved }) {
   const core = rows.filter((a) => a.is_core && a.is_active);
   const [w, setW] = useState({});
   const [ask, setAsk] = useState(false);
-  useEffect(() => { setW(Object.fromEntries(core.map((a) => [a.id, a.weightage ?? ""]))); }, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setW(Object.fromEntries(core.map((a) => [a.id, a.weightage ?? ""]))); }, [rows]); // eslint-disable-line
   const total = Object.values(w).reduce((s, x) => s + Number(x || 0), 0);
   const ok = core.length === 7 && Math.abs(total - 100) < 0.01;
   const save = async (reason) => {

@@ -45,7 +45,7 @@ export default function TeamReview() {
   const [data, setData] = useState(null);
   const [open, setOpen] = useState(null);
   const load = () => api.get("/daily-reports/team", { params: { date } }).then((r) => setData(r.data)).catch((e) => toast.error(errMsg(e)));
-  useEffect(() => { setOpen(null); load(); }, [date]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setOpen(null); load(); }, [date]); // eslint-disable-line
   const openReport = (uid) => api.get("/daily-reports/day", { params: { date, user_id: uid } }).then((r) => setOpen(r.data)).catch((e) => toast.error(errMsg(e)));
   if (!data) return <Loading />;
   const counts = data.rows.reduce((a, r) => ((a[r.status] = (a[r.status] || 0) + 1), a), {});

@@ -17,7 +17,7 @@ export default function Reports() {
   }, []);
   const params = () => ({ start: f.start, end: f.end, employee: f.employee || undefined, stage: f.stage || undefined, service: f.service || undefined });
   const run = () => { setData(null); api.get(`/reports/${f.name}`, { params: params() }).then((r) => setData(r.data)).catch((e) => { toast.error(errMsg(e)); setData({ rows: [], columns: [] }); }); };
-  useEffect(() => { if (list) run(); }, [list, f.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (list) run(); }, [list, f.name]); // eslint-disable-line
   const exp = async (format) => {
     try {
       const r = await api.get(`/reports/${f.name}`, { params: { ...params(), format }, responseType: "blob" });

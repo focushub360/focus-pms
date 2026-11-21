@@ -57,7 +57,7 @@ export default function MonthlyScorecard({ uid }) {
   const [data, setData] = useState(null);
   const [month, setMonth] = useState(MONTHS[MONTHS.length - 1]);
   const load = () => api.get("/scorecards/monthly", { params: { user_id: uid } }).then((r) => setData(r.data)).catch(() => setData({ items: [] }));
-  useEffect(() => { load(); }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [uid]); // eslint-disable-line
   const submit = async () => {
     try { await api.post("/scorecards/monthly/submit", { month }); toast.success(`Scorecard for ${month} submitted`); load(); } catch (e) { toast.error(errMsg(e)); }
   };

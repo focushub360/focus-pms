@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
 
 import bcrypt
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -13,6 +15,8 @@ from jose import jwt, JWTError
 import logging
 
 logger = logging.getLogger("focus-pms.auth")
+
+load_dotenv(Path(__file__).parent / ".env")
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
 if not JWT_SECRET:
