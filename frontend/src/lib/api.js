@@ -1,10 +1,16 @@
 import axios from "axios";
 
-const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
-const API_URL = BACKEND_BASE.endsWith("/api") ? BACKEND_BASE : `${BACKEND_BASE}/api`;
+const getApiBase = () => {
+  // If running in browser on a remote IP or domain, always use relative /api
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "/api";
+  }
+  const base = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+  return base.endsWith("/api") ? base : `${base}/api`;
+};
 
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getApiBase(),
   headers: {
     "Content-Type": "application/json",
   },
