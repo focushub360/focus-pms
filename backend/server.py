@@ -801,33 +801,31 @@ app.include_router(reports_router)
 async def _startup():
     logger.info("Initializing TaskBoard backend services...")
     # 1. Connectivity check
+    db_ok = False
     try:
         await client.admin.command("ping")
+        db_ok = True
         logger.info("MongoDB connection verified successfully: %s", getattr(db, "name", "default"))
     except Exception as e:
-        logger.error("MongoDB initial ping warning: %s", e)
+        logger.warning("MongoDB initial ping note: %s", e)
 
-    # 2. Seed data & approver defaults
-    try:
-        await run_seed(db)
-        await apply_core_defaults()
-        await init_approver_settings()
-    except Exception as e:
-        logger.error("Seed execution warning: %s", e)
+    # 2. Seed data & approver defaults (if database is connected)
+    if db_ok:
+        try:
+            await run_seed(db)
+            await apply_core_defaults()
+            await init_approver_settings()
+            await ensure_indexes(db)
+        except Exception as e:
+            logger.error("Seed/index execution warning: %s", e)
 
-    # 3. Ensure comprehensive production database indexes
-    try:
-        await ensure_indexes(db)
-    except Exception as e:
-        logger.error("Database indexing warning: %s", e)
-
-    # 4. Initialize storage
+    # 3. Initialize storage
     try:
         init_storage()
     except Exception as e:
         logger.warning("Storage initialization warning: %s", e)
 
-    logger.info("TaskBoard backend ready for production traffic")
+    logger.info("TaskBoard backend ready for traffic")
 
 
 @app.on_event("shutdown")
