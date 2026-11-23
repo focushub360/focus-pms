@@ -67,16 +67,16 @@ export function GlobalSearch() {
 
       {/* Mobile search modal backdrop & popup */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start justify-center p-3 pt-6 md:hidden">
-          <div ref={mobileRef} className="w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center gap-2 p-3 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-3 pt-6 md:hidden">
+          <div ref={mobileRef} className="w-full max-w-lg bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden">
+            <div className="flex items-center gap-2 p-3.5 border-b border-slate-200/70">
               <Search size={18} className="text-slate-400 shrink-0 ml-1" />
               <input
                 ref={inputRef}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search leads, opportunities, accounts..."
-                className="w-full text-sm outline-none bg-transparent placeholder:text-slate-400 text-slate-800"
+                className="w-full text-sm outline-none bg-transparent placeholder:text-slate-400 text-slate-800 font-medium"
               />
               {q ? (
                 <button onClick={() => setQ("")} className="p-1 rounded-md text-slate-400 hover:text-slate-600">
@@ -117,22 +117,22 @@ export function GlobalSearch() {
 
       {/* Desktop / Tablet inline search bar */}
       <div className="relative hidden md:block" ref={ref}>
-        <Search size={15} className="absolute left-2.5 top-2.5 text-slate-400" />
+        <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search leads, accounts, opportunities, people…"
-          className="fe-input pl-8 py-1.5 w-64 lg:w-80 text-sm transition-all focus:w-80 lg:focus:w-96"
+          className="fe-input pl-9 py-1.5 w-64 lg:w-80 text-sm transition-all focus:w-80 lg:focus:w-96 rounded-2xl bg-slate-100/70 focus:bg-white border-transparent focus:border-[#007AFF]"
           data-testid="global-search"
         />
         {res && (
-          <div className="absolute z-50 mt-1 w-[26rem] bg-white border border-slate-200 rounded-lg shadow-xl max-h-96 overflow-y-auto" data-testid="global-search-results">
-            {total === 0 && <div className="p-4 text-sm text-slate-400">No matches.</div>}
+          <div className="absolute z-50 mt-2 w-[26rem] bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-96 overflow-y-auto fe-scroll" data-testid="global-search-results">
+            {total === 0 && <div className="p-4 text-sm text-slate-400 text-center">No matches found.</div>}
             {groups
               .filter((g) => g[1].length)
               .map(([label, items, link, fmt]) => (
-                <div key={label} className="py-1">
-                  <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</div>
+                <div key={label} className="py-1.5">
+                  <div className="px-3.5 pt-2 pb-1 text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</div>
                   {items.map((x) => (
                     <button
                       key={x.id}
@@ -141,7 +141,7 @@ export function GlobalSearch() {
                         setQ("");
                         nav(link);
                       }}
-                      className="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 text-slate-700 transition-colors"
+                      className="block w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 text-slate-700 transition-colors rounded-xl mx-1"
                     >
                       {fmt(x)}
                     </button>
@@ -173,14 +173,14 @@ export function Notifications() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-md hover:bg-slate-100 transition-colors text-slate-600"
+        className="relative p-2 rounded-2xl hover:bg-slate-100 transition-all text-slate-600 active:scale-95"
         data-testid="notifications-btn"
         aria-label="Notifications"
       >
         <Bell size={18} />
         {items.length > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 bg-[#E81B90] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center animate-pulse"
+            className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-[#FF2D55] to-[#E81B90] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shadow-xs"
             data-testid="notifications-count"
           >
             {items.length}
@@ -188,10 +188,10 @@ export function Notifications() {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-72 sm:w-80 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden" data-testid="notifications-panel">
-          <div className="px-4 py-2.5 border-b border-slate-100 text-sm font-semibold text-[#262262] flex items-center justify-between">
-            <span>Notifications</span>
-            {items.length > 0 && <span className="text-xs text-slate-400 font-normal">{items.length} new</span>}
+        <div className="absolute right-0 z-50 mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden" data-testid="notifications-panel">
+          <div className="px-4 py-3 border-b border-slate-100/90 text-sm font-semibold text-[#262262] flex items-center justify-between">
+            <span className="font-bold">Notifications</span>
+            {items.length > 0 && <span className="text-xs text-blue-600 font-semibold">{items.length} new</span>}
           </div>
           <div className="max-h-80 overflow-y-auto">
             {items.length === 0 ? (

@@ -2,8 +2,8 @@ import { STATUS_META } from "@/lib/api";
 import { Loader2, Inbox } from "lucide-react";
 
 export const KpiCard = ({ label, value, sub, accent = "#264494", testid }) => (
-  <div className="fe-kpi-card" data-testid={testid} style={{ "--acc": accent }}>
-    <span className="absolute top-0 left-0 right-0 h-[3px] rounded-t-lg" style={{ background: accent }} />
+  <div className="fe-kpi-card group cursor-default" data-testid={testid} style={{ "--acc": accent }}>
+    <span className="absolute top-0 left-0 right-0 h-[4px] rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${accent}, #007AFF)` }} />
     <div className="fe-kpi-label">{label}</div>
     <div className="fe-kpi-value text-[22px] lg:text-[26px]">{value}</div>
     {sub && <div className="fe-kpi-sub">{sub}</div>}
@@ -11,14 +11,14 @@ export const KpiCard = ({ label, value, sub, accent = "#264494", testid }) => (
 );
 
 export const Panel = ({ title, right, children, className = "", testid }) => (
-  <section className={`bg-white border border-slate-200 rounded-lg ${className}`} data-testid={testid}>
+  <section className={`ios-card overflow-hidden ${className}`} data-testid={testid}>
     {(title || right) && (
-      <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3">
-        <h3 className="font-semibold text-[15px]" style={{ color: "#262262" }}>{title}</h3>
+      <div className="px-6 py-4 border-b border-slate-100/90 flex items-center justify-between gap-3 bg-white/60 backdrop-blur-md">
+        <h3 className="font-bold text-[15px] bg-gradient-to-r from-[#262262] to-[#264494] bg-clip-text text-transparent">{title}</h3>
         {right}
       </div>
     )}
-    <div className="p-5">{children}</div>
+    <div className="p-6">{children}</div>
   </section>
 );
 

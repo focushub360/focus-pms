@@ -33,10 +33,10 @@ export default function Dashboard() {
     <div className="space-y-5" data-testid="dashboard-page">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-[#262262] via-[#264494] to-[#4F46E5] bg-clip-text text-transparent">
             Welcome, {user?.name?.split(" ")[0]}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
             Live figures from opportunities, leads, activities, and approved scorecards.
           </p>
         </div>
@@ -47,16 +47,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto fe-scroll pb-px" data-testid="dashboard-tabs">
+      {/* iOS Segmented Control Tabs */}
+      <div className="p-1 bg-slate-200/60 backdrop-blur-md rounded-2xl inline-flex gap-1 max-w-full overflow-x-auto fe-scroll shadow-inner border border-slate-200/80" data-testid="dashboard-tabs">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             data-testid={`dash-tab-${t.id}`}
-            className={`px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-px transition-colors shrink-0 whitespace-nowrap ${
+            className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 shrink-0 whitespace-nowrap active:scale-95 ${
               tab === t.id
-                ? "border-[#264494] text-[#264494] font-semibold"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#262262] shadow-sm font-bold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/40"
             }`}
           >
             {t.label}
