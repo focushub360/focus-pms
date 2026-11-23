@@ -755,7 +755,7 @@ async def audit_list(limit: int = Query(200, le=1000), user: dict = Depends(requ
 @app.get("/")
 async def root():
     return {
-        "name": "Focus PMS Backend API",
+        "name": "TaskBoard Backend API",
         "status": "online",
         "version": "1.0.0",
         "docs": "/docs",
@@ -776,7 +776,7 @@ async def health():
 
     return {
         "status": "ok" if db_connected else "degraded",
-        "name": "Focus PMS",
+        "name": "TaskBoard",
         "database": {
             "status": "connected" if db_connected else "disconnected",
             "name": getattr(db, "name", "unknown"),
@@ -799,7 +799,7 @@ app.include_router(reports_router)
 
 @app.on_event("startup")
 async def _startup():
-    logger.info("Initializing Focus PMS backend services...")
+    logger.info("Initializing TaskBoard backend services...")
     # 1. Connectivity check
     try:
         await client.admin.command("ping")
@@ -827,10 +827,10 @@ async def _startup():
     except Exception as e:
         logger.warning("Storage initialization warning: %s", e)
 
-    logger.info("Focus PMS backend ready for production traffic")
+    logger.info("TaskBoard backend ready for production traffic")
 
 
 @app.on_event("shutdown")
 async def _shutdown():
-    logger.info("Shutting down Focus PMS backend...")
+    logger.info("Shutting down TaskBoard backend...")
     client.close()

@@ -1,13 +1,13 @@
-# Focus PMS — Sales & Marketing Performance Management System
+# TaskBoard — Sales & Marketing Performance Management System
 
-Production-ready enterprise Performance Management System (PMS) tailored for Focus Engineering. Built with FastAPI, MongoDB, and React.
+Production-ready enterprise Performance Management System (PMS) and TaskBoard. Built with FastAPI, MongoDB, and React. Responsive across Web, Mobile, and Desktop.
 
 ---
 
 ## 🏛 Architecture Overview
 
 - **Backend (`/backend`)**: FastAPI, Motor (Async MongoDB), PyJWT authentication, bcrypt password hashing, Gunicorn + Uvicorn workers.
-- **Frontend (`/frontend`)**: React 19, React Router 7, Tailwind CSS, Lucide icons, Sonner notifications, Recharts.
+- **Frontend (`/frontend`)**: React 19, React Router 7, Tailwind CSS, Lucide icons, Sonner notifications, Recharts. Fully responsive with mobile bottom thumb bar, slide-over drawer, and adaptive layouts.
 - **Database**: MongoDB (Atlas or self-hosted) with connection pooling and comprehensive index coverage.
 - **Deployment**:
   - **Backend API**: Render (Web Service / Docker)
@@ -19,7 +19,7 @@ Production-ready enterprise Performance Management System (PMS) tailored for Foc
 
 ### Step 1: MongoDB Database (Production Ready)
 
-Focus PMS requires a MongoDB 6.0+ or MongoDB Atlas cluster.
+TaskBoard requires a MongoDB 6.0+ or MongoDB Atlas cluster.
 
 1. **Create MongoDB Atlas Cluster**:
    - Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free or dedicated cluster.

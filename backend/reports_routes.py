@@ -209,7 +209,7 @@ def _export(name: str, cols, rows, fmt: str, f: dict) -> Response:
     tbl.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#262262")), ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                              ("FONTSIZE", (0, 0), (-1, -1), 7), ("GRID", (0, 0), (-1, -1), 0.25, colors.grey)]))
     SimpleDocTemplate(buf, pagesize=landscape(A4), title=REPORTS[name]).build(
-        [Paragraph(f"Focus PMS — {REPORTS[name]}", st["Title"]), Paragraph(f"Period {f['start']} to {f['end']}", st["Normal"]), Spacer(1, 8), tbl])
+        [Paragraph(f"TaskBoard — {REPORTS[name]}", st["Title"]), Paragraph(f"Period {f['start']} to {f['end']}", st["Normal"]), Spacer(1, 8), tbl])
     return Response(buf.getvalue(), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{fn}.pdf"'})
 
 

@@ -175,12 +175,12 @@ def _wrap(title: str, inner_html: str) -> str:
         f'<table role="presentation" width="600" style="background:#FFFFFF;border:1px solid #E2E8F0;'
         f'border-radius:8px;overflow:hidden;font-family:Arial,sans-serif;color:#0F172A;">'
         f'<tr><td style="background:#262262;padding:20px 24px;color:#FFFFFF;font-size:16px;'
-        f'font-weight:bold;letter-spacing:0.3px;">Focus Engineering · PMS</td></tr>'
+        f'font-weight:bold;letter-spacing:0.3px;">TaskBoard</td></tr>'
         f'<tr><td style="padding:28px 28px 8px 28px;font-size:20px;font-weight:bold;color:#262262;">{escape(title)}</td></tr>'
         f'<tr><td style="padding:0 28px 24px 28px;font-size:14px;line-height:1.6;color:#334155;">'
         f'{inner_html}'
         f'<p style="font-size:12px;color:#64748B;margin-top:28px;border-top:1px solid #E2E8F0;padding-top:12px;">'
-        f'Sent by Focus Engineering PMS. We will never ask you for your password or OTP by email.</p>'
+        f'Sent by TaskBoard. We will never ask you for your password or OTP by email.</p>'
         f'</td></tr></table></td></tr></table>'
     )
 
@@ -190,7 +190,7 @@ async def send_invite_email(*, to: str, name: str, token: str) -> str | None:
     link = f"{base_url}/accept-invite/{token}"
     inner = (
         f'<p>Hi {escape(name)},</p>'
-        f'<p>You have been invited to join <strong>Focus Engineering PMS</strong>, the Sales &amp; Marketing Performance Management System for Focus Engineering.</p>'
+        f'<p>You have been invited to join <strong>TaskBoard</strong>, the Sales &amp; Marketing Performance Management System.</p>'
         f'<p>Click the button below to set your password and activate your account. This link expires in 48 hours.</p>'
         f'<p style="margin:24px 0;">'
         f'<a href="{link}" style="background:#264494;color:#FFFFFF;text-decoration:none;'
@@ -199,7 +199,7 @@ async def send_invite_email(*, to: str, name: str, token: str) -> str | None:
         f'<p style="font-size:12px;color:#64748B;">Direct link: <a href="{link}">{link}</a></p>'
     )
     logger.info("Account invite token generated for %s: %s", to, link)
-    return await send_email(to=to, subject="Activate your Focus PMS account", html=_wrap("Welcome to Focus PMS", inner))
+    return await send_email(to=to, subject="Activate your TaskBoard account", html=_wrap("Welcome to TaskBoard", inner))
 
 
 async def send_password_reset_email(*, to: str, name: str, token: str) -> str | None:
@@ -207,7 +207,7 @@ async def send_password_reset_email(*, to: str, name: str, token: str) -> str | 
     link = f"{base_url}/reset-password/{token}"
     inner = (
         f'<p>Hi {escape(name)},</p>'
-        f'<p>We received a request to reset your Focus PMS password. Click the button below to set a new one. This link expires in 1 hour.</p>'
+        f'<p>We received a request to reset your TaskBoard password. Click the button below to set a new one. This link expires in 1 hour.</p>'
         f'<p style="margin:24px 0;">'
         f'<a href="{link}" style="background:#264494;color:#FFFFFF;text-decoration:none;'
         f'padding:12px 24px;border-radius:6px;font-weight:bold;display:inline-block;">Reset my password</a>'
@@ -216,4 +216,4 @@ async def send_password_reset_email(*, to: str, name: str, token: str) -> str | 
         f'<p style="font-size:12px;color:#64748B;">If you did not request this, you can ignore this email.</p>'
     )
     logger.info("Password reset token generated for %s: %s", to, link)
-    return await send_email(to=to, subject="Reset your Focus PMS password", html=_wrap("Password reset", inner))
+    return await send_email(to=to, subject="Reset your TaskBoard password", html=_wrap("Password reset", inner))
