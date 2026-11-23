@@ -45,8 +45,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 set_db(db)
 
 app = FastAPI(
-    title="Focus PMS",
-    description="Sales & Marketing Performance Management System API",
+    title="TaskBoard",
+    description="TaskBoard — Sales & Marketing Performance Management System API",
     version="1.0.0",
 )
 api = APIRouter(prefix="/api")
