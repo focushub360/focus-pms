@@ -25,16 +25,13 @@ export function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#F8F9FA]">
       <form onSubmit={submit} className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="mb-6">
           <img
             src="/logo.png"
             alt="TaskBoard"
-            className="h-10 w-10 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200"
+            className="h-9 w-auto max-w-[200px] object-contain mb-1.5"
           />
-          <div>
-            <div className="font-bold text-xl text-[#262262] leading-tight">TaskBoard</div>
-            <div className="text-[11px] text-slate-500 font-medium">Password Recovery</div>
-          </div>
+          <div className="text-[11px] text-slate-500 font-medium">Password Recovery</div>
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Forgot password?</h2>
@@ -103,16 +100,13 @@ export function ResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#F8F9FA]">
       <form onSubmit={submit} className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="mb-6">
           <img
             src="/logo.png"
             alt="TaskBoard"
-            className="h-10 w-10 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200"
+            className="h-9 w-auto max-w-[200px] object-contain mb-1.5"
           />
-          <div>
-            <div className="font-bold text-xl text-[#262262] leading-tight">TaskBoard</div>
-            <div className="text-[11px] text-slate-500 font-medium">New Password</div>
-          </div>
+          <div className="text-[11px] text-slate-500 font-medium">New Password</div>
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Reset password</h2>

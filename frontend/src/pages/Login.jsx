@@ -35,17 +35,16 @@ export default function Login() {
         className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden"
         style={{ background: "#262262" }}
       >
-        <div className="flex items-center gap-3.5 z-10">
-          <img
-            src="/logo.png"
-            alt="TaskBoard"
-            className="h-12 w-12 object-contain bg-white/10 p-2 rounded-xl border border-white/20 shadow-md"
-          />
-          <div>
-            <div className="font-bold text-2xl tracking-tight text-white leading-tight">TaskBoard</div>
-            <div className="text-xs uppercase tracking-widest text-[#51C5DC] font-semibold">
-              Performance &amp; Management Hub
-            </div>
+        <div className="z-10">
+          <div className="inline-flex items-center p-3.5 rounded-2xl bg-white shadow-lg">
+            <img
+              src="/logo.png"
+              alt="TaskBoard"
+              className="h-10 w-auto max-w-[240px] object-contain"
+            />
+          </div>
+          <div className="text-xs uppercase tracking-widest text-[#51C5DC] font-semibold mt-3">
+            Performance &amp; Management Hub
           </div>
         </div>
 
@@ -92,19 +91,14 @@ export default function Login() {
           data-testid="login-form"
         >
           {/* Mobile & Tablet Logo Header */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="mb-6">
             <img
               src="/logo.png"
               alt="TaskBoard"
-              className="h-11 w-11 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200 shadow-2xs shrink-0"
+              className="h-9 w-auto max-w-[210px] object-contain mb-1.5"
             />
-            <div>
-              <div className="font-bold text-xl sm:text-2xl text-[#262262] leading-tight">
-                TaskBoard
-              </div>
-              <div className="text-xs text-slate-500 font-medium">
-                Sales &amp; Performance Management
-              </div>
+            <div className="text-xs text-slate-500 font-medium">
+              Sales &amp; Performance Management
             </div>
           </div>
 

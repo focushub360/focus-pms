@@ -64,20 +64,17 @@ export default function Shell({ children }) {
         data-testid="app-sidebar"
       >
         {/* Brand Header — Fixed at Top */}
-        <div className="fe-sidebar-brand h-16 flex items-center gap-3 px-4 shrink-0">
+        <div
+          onClick={() => navigate("/app/dashboard")}
+          className="h-16 flex items-center px-4 shrink-0 bg-white border-b border-slate-200 cursor-pointer shadow-xs select-none"
+          data-testid="sidebar-brand-header"
+          title="TaskBoard Dashboard"
+        >
           <img
             src="/logo.png"
-            alt="TaskBoard Logo"
-            className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1 shrink-0 border border-white/15 shadow-2xs"
+            alt="TaskBoard"
+            className="h-9 w-auto max-w-[215px] object-contain"
           />
-          <div className="min-w-0">
-            <div className="text-white font-bold text-base tracking-tight truncate leading-tight">
-              TaskBoard
-            </div>
-            <div className="text-[10px] uppercase font-semibold tracking-widest text-[#51C5DC] truncate">
-              Performance Hub
-            </div>
-          </div>
         </div>
 
         {/* Navigation Items — Standard scrollable list independent of page body */}
@@ -140,15 +137,12 @@ export default function Shell({ children }) {
           >
             <Menu size={22} />
           </button>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/app/dashboard")}>
+          <div className="flex items-center cursor-pointer" onClick={() => navigate("/app/dashboard")}>
             <img
               src="/logo.png"
-              alt="TaskBoard Logo"
-              className="h-8 w-8 object-contain rounded-md shrink-0 shadow-2xs"
+              alt="TaskBoard"
+              className="h-7 sm:h-8 w-auto max-w-[160px] sm:max-w-[200px] object-contain"
             />
-            <span className="font-bold text-base sm:text-lg text-[#262262] tracking-tight">
-              TaskBoard
-            </span>
           </div>
         </div>
 
@@ -177,23 +171,15 @@ export default function Shell({ children }) {
           {/* Drawer content */}
           <div className="relative w-72 sm:w-80 max-w-[85vw] bg-[#262262] text-white flex flex-col h-full shadow-2xl z-10 fe-scroll">
             {/* Drawer Header */}
-            <div className="h-16 flex items-center justify-between px-4 bg-[#1E1A4F] border-b border-[#342F7C]">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src="/logo.png"
-                  alt="TaskBoard"
-                  className="h-9 w-9 object-contain rounded-lg bg-white/10 p-1 border border-white/20"
-                />
-                <div>
-                  <div className="font-bold text-base text-white leading-tight">TaskBoard</div>
-                  <div className="text-[10px] uppercase font-semibold tracking-wider text-[#51C5DC]">
-                    Enterprise PMS
-                  </div>
-                </div>
-              </div>
+            <div className="h-16 flex items-center justify-between px-4 bg-white border-b border-slate-200">
+              <img
+                src="/logo.png"
+                alt="TaskBoard"
+                className="h-8 w-auto max-w-[190px] object-contain"
+              />
               <button
                 onClick={() => setDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                 aria-label="Close menu"
               >
                 <X size={20} />

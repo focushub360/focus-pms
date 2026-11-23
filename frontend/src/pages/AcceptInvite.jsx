@@ -33,16 +33,13 @@ export default function AcceptInvite() {
         className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md"
         data-testid="accept-invite-form"
       >
-        <div className="flex items-center gap-3 mb-6">
+        <div className="mb-6">
           <img
             src="/logo.png"
             alt="TaskBoard"
-            className="h-10 w-10 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200"
+            className="h-9 w-auto max-w-[200px] object-contain mb-1.5"
           />
-          <div>
-            <div className="font-bold text-xl text-[#262262] leading-tight">TaskBoard</div>
-            <div className="text-[11px] text-slate-500 font-medium">Account Activation</div>
-          </div>
+          <div className="text-[11px] text-slate-500 font-medium">Account Activation</div>
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Activate your account</h2>
