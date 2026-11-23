@@ -3,12 +3,16 @@ import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ChangePassword() {
   const { refresh, user } = useAuth();
   const [cur, setCur] = useState("");
   const [n1, setN1] = useState("");
   const [n2, setN2] = useState("");
+  const [showCur, setShowCur] = useState(false);
+  const [showN1, setShowN1] = useState(false);
+  const [showN2, setShowN2] = useState(false);
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
 
@@ -53,43 +57,76 @@ export default function ChangePassword() {
         <div className="mt-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Current Password</label>
-            <input
-              type="password"
-              required
-              value={cur}
-              onChange={(e) => setCur(e.target.value)}
-              className="fe-input"
-              data-testid="cp-current"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showCur ? "text" : "password"}
+                required
+                value={cur}
+                onChange={(e) => setCur(e.target.value)}
+                className="fe-input pr-10"
+                data-testid="cp-current"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCur(!showCur)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label={showCur ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showCur ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">New Password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={n1}
-              onChange={(e) => setN1(e.target.value)}
-              className="fe-input"
-              data-testid="cp-new1"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showN1 ? "text" : "password"}
+                required
+                minLength={8}
+                value={n1}
+                onChange={(e) => setN1(e.target.value)}
+                className="fe-input pr-10"
+                data-testid="cp-new1"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowN1(!showN1)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label={showN1 ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showN1 ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Confirm New Password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={n2}
-              onChange={(e) => setN2(e.target.value)}
-              className="fe-input"
-              data-testid="cp-new2"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showN2 ? "text" : "password"}
+                required
+                minLength={8}
+                value={n2}
+                onChange={(e) => setN2(e.target.value)}
+                className="fe-input pr-10"
+                data-testid="cp-new2"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowN2(!showN2)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label={showN2 ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showN2 ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
         </div>
 

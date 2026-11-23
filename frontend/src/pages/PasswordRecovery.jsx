@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Link, useParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -78,6 +79,8 @@ export function ResetPassword() {
   const { token } = useParams();
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
+  const [showP1, setShowP1] = useState(false);
+  const [showP2, setShowP2] = useState(false);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -114,28 +117,50 @@ export function ResetPassword() {
         <div className="mt-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">New Password (min 8 chars)</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={p1}
-              onChange={(e) => setP1(e.target.value)}
-              className="fe-input"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showP1 ? "text" : "password"}
+                required
+                minLength={8}
+                value={p1}
+                onChange={(e) => setP1(e.target.value)}
+                className="fe-input pr-10"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowP1(!showP1)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label={showP1 ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showP1 ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={p2}
-              onChange={(e) => setP2(e.target.value)}
-              className="fe-input"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showP2 ? "text" : "password"}
+                required
+                minLength={8}
+                value={p2}
+                onChange={(e) => setP2(e.target.value)}
+                className="fe-input pr-10"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowP2(!showP2)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label={showP2 ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showP2 ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
         </div>
 
