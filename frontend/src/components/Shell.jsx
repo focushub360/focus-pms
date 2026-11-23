@@ -57,18 +57,18 @@ export default function Shell({ children }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F8F9FA] text-[#0F172A]">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#0F172A]">
       {/* ────────────────── DESKTOP SIDEBAR (>= 1024px) ────────────────── */}
       <aside
-        className="hidden lg:flex w-64 flex-col fe-sidebar fe-scroll sticky top-0 h-screen shrink-0 border-r border-[#342F7C] z-30"
+        className="hidden lg:flex w-64 flex-col fe-sidebar fixed inset-y-0 left-0 h-screen border-r border-[#342F7C] z-30 select-none shadow-md"
         data-testid="app-sidebar"
       >
-        {/* Brand Header */}
+        {/* Brand Header — Fixed at Top */}
         <div className="fe-sidebar-brand h-16 flex items-center gap-3 px-4 shrink-0">
           <img
             src="/logo.png"
             alt="TaskBoard Logo"
-            className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1 shrink-0 border border-white/15"
+            className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1 shrink-0 border border-white/15 shadow-2xs"
           />
           <div className="min-w-0">
             <div className="text-white font-bold text-base tracking-tight truncate leading-tight">
@@ -80,8 +80,8 @@ export default function Shell({ children }) {
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto fe-scroll">
+        {/* Navigation Items — Standard scrollable list independent of page body */}
+        <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto fe-scroll overscroll-contain">
           {visible.map((item) => (
             <NavLink
               key={item.to}
@@ -101,14 +101,14 @@ export default function Shell({ children }) {
           ))}
         </nav>
 
-        {/* User Card & Sign out */}
-        <div className="p-3 border-t border-[#342F7C]/60 shrink-0 bg-[#1E1A4F]/50">
+        {/* User Card & Sign out — Fixed at Bottom */}
+        <div className="p-3 border-t border-[#342F7C]/60 shrink-0 bg-[#1E1A4F]/60">
           <div
             onClick={() => navigate("/app/profile")}
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors mb-1.5"
             title="View Profile"
           >
-            <div className="w-8 h-8 rounded-full bg-[#264494] text-white flex items-center justify-center font-bold text-xs shrink-0 border border-white/20">
+            <div className="w-8 h-8 rounded-full bg-[#264494] text-white flex items-center justify-center font-bold text-xs shrink-0 border border-white/20 shadow-2xs">
               {(user?.name || "?").slice(0, 1).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export default function Shell({ children }) {
           <button
             onClick={logout}
             data-testid="logout-btn"
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-rose-300 hover:text-white hover:bg-rose-500/20 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-rose-300 hover:text-white hover:bg-rose-500/20 transition-all cursor-pointer"
           >
             <LogOut size={15} /> <span>Sign out</span>
           </button>
@@ -261,10 +261,10 @@ export default function Shell({ children }) {
       )}
 
       {/* ────────────────── MAIN CONTENT AREA ────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="lg:pl-64 flex flex-col min-w-0 min-h-screen">
         {/* Desktop Header (>= 1024px) */}
         <header
-          className="hidden lg:flex h-16 bg-white border-b border-slate-200 items-center justify-between px-6 sticky top-0 z-20 shadow-2xs"
+          className="hidden lg:flex h-16 bg-white/95 backdrop-blur-xs border-b border-slate-200 items-center justify-between px-6 sticky top-0 z-20 shadow-2xs"
           data-testid="app-header"
         >
           <div>

@@ -25,7 +25,10 @@ html, body, #root {
 }
 
 /* Sidebar styling */
-.fe-sidebar { background: var(--fe-deep-purple); }
+.fe-sidebar {
+  background: var(--fe-deep-purple);
+  will-change: transform;
+}
 .fe-sidebar-brand { background: #1E1A4F; border-bottom: 1px solid #342F7C; }
 .fe-nav-item { color: #CBD5E1; transition: background .15s, color .15s; }
 .fe-nav-item:hover { background: #322D7A; color: #FFFFFF; }
@@ -86,7 +89,10 @@ html, body, #root {
 /* Scrollbar customizations */
 .fe-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .fe-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
-.fe-sidebar.fe-scroll::-webkit-scrollbar-thumb { background: #342F7C; }
+.fe-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+.fe-sidebar.fe-scroll::-webkit-scrollbar { width: 4px; }
+.fe-sidebar.fe-scroll::-webkit-scrollbar-thumb { background: #342F7C; border-radius: 2px; }
+.fe-sidebar.fe-scroll::-webkit-scrollbar-thumb:hover { background: #51C5DC; }
 
 /* Safe area support for modern mobile devices (iPhone notch/bar) */
 .pb-safe {
