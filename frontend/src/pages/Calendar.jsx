@@ -30,25 +30,35 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-5" data-testid="calendar-page">
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "#262262" }}>Calendar &amp; Activities</h1>
-        <p className="text-sm text-slate-500 mt-1">Meetings, sales calls, follow-ups, tasks, deadlines and reminders. Completed activities feed your KPIs and daily report.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">Calendar &amp; Activities</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Meetings, sales calls, follow-ups, tasks, deadlines and reminders.</p>
+        </div>
+        <button className="fe-btn-primary text-xs sm:text-sm self-start sm:self-auto shrink-0 flex items-center gap-1.5 shadow-xs" onClick={() => setDlg({ day: anchor, hour: 10 })} data-testid="cal-new">
+          <Plus size={16} /> New activity
+        </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <button className="fe-btn-secondary text-sm" onClick={() => setAnchor(todayKey())} data-testid="cal-today">Today</button>
-        <button className="fe-btn-secondary px-2" onClick={() => setAnchor(step(view, anchor, -1))} data-testid="cal-prev" aria-label="Previous"><ChevronLeft size={16} /></button>
-        <button className="fe-btn-secondary px-2" onClick={() => setAnchor(step(view, anchor, 1))} data-testid="cal-next" aria-label="Next"><ChevronRight size={16} /></button>
-        <h2 className="text-base md:text-lg font-semibold text-[#262262] ml-2" data-testid="cal-title">{title(view, anchor)}</h2>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div className="flex rounded-md border border-slate-200 overflow-hidden text-sm" data-testid="cal-scope">
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button className="fe-btn-secondary text-xs sm:text-sm" onClick={() => setAnchor(todayKey())} data-testid="cal-today">Today</button>
+          <div className="flex items-center border border-slate-200 rounded-md overflow-hidden">
+            <button className="p-1.5 hover:bg-slate-50 text-slate-600" onClick={() => setAnchor(step(view, anchor, -1))} data-testid="cal-prev" aria-label="Previous"><ChevronLeft size={16} /></button>
+            <button className="p-1.5 hover:bg-slate-50 text-slate-600 border-l border-slate-200" onClick={() => setAnchor(step(view, anchor, 1))} data-testid="cal-next" aria-label="Next"><ChevronRight size={16} /></button>
+          </div>
+          <h2 className="text-sm sm:text-base md:text-lg font-bold text-[#262262] ml-1" data-testid="cal-title">{title(view, anchor)}</h2>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs sm:text-sm" data-testid="cal-scope">
             {[["mine", "My calendar"], ["team", "Team calendar"]].map(([k, l]) => (
-              <button key={k} onClick={() => setScope(k)} className={`px-3 py-1.5 ${scope === k ? "bg-[#264494] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} data-testid={`cal-scope-${k}`}>{l}</button>))}
+              <button key={k} onClick={() => setScope(k)} className={`px-2.5 sm:px-3 py-1.5 ${scope === k ? "bg-[#264494] text-white font-semibold" : "bg-white text-slate-600 hover:bg-slate-50"}`} data-testid={`cal-scope-${k}`}>{l}</button>))}
           </div>
-          <div className="flex rounded-md border border-slate-200 overflow-hidden text-sm" data-testid="cal-views">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs sm:text-sm overflow-x-auto" data-testid="cal-views">
             {VIEWS.map((v) => (
-              <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 capitalize ${view === v ? "bg-[#264494] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`} data-testid={`cal-view-${v}`}>{v}</button>))}
+              <button key={v} onClick={() => setView(v)} className={`px-2 sm:px-3 py-1.5 capitalize whitespace-nowrap ${view === v ? "bg-[#264494] text-white font-semibold" : "bg-white text-slate-600 hover:bg-slate-50"}`} data-testid={`cal-view-${v}`}>{v}</button>))}
           </div>
-          <button className="fe-btn-primary text-sm flex items-center gap-1" onClick={() => setDlg({ day: anchor, hour: 10 })} data-testid="cal-new"><Plus size={14} /> New activity</button>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5" data-testid="cal-type-filter">

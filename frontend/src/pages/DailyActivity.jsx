@@ -66,12 +66,12 @@ export default function DailyActivity() {
   return (
     <div className="space-y-5" data-testid="daily-activity-page">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "#262262" }}>Daily Activity</h1>
-        <p className="text-sm text-slate-500 mt-1">Mandatory daily report (Mon–Sat, except the 2nd Saturday). Editable until 11:59:59 PM IST; locked at midnight. Changes after that need HOD-approved correction.</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">Daily Activity</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">Mandatory daily report (Mon–Sat, except the 2nd Saturday). Editable until 11:59:59 PM IST; locked at midnight.</p>
       </div>
-      <div className="flex gap-1 border-b border-slate-200" data-testid="daily-tabs">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto fe-scroll pb-px" data-testid="daily-tabs">
         {tabs.map((t) => <button key={t.id} onClick={() => setParams({ tab: t.id })} data-testid={`daily-tab-${t.id}`}
-          className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px ${tab === t.id ? "border-[#264494] text-[#264494]" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{t.label}</button>)}
+          className={`px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-px shrink-0 whitespace-nowrap transition-colors ${tab === t.id ? "border-[#264494] text-[#264494] font-semibold" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{t.label}</button>)}
       </div>
       {tab === "mine" && <MyReport date={date} setDate={setDate} onChange={() => setTick((x) => x + 1)} />}
       {tab === "history" && <History refresh={tick} onPick={(d) => { setDate(d); setParams({ tab: "mine" }); }} />}

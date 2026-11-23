@@ -49,13 +49,13 @@ export default function Targets() {
   return (
     <div className="space-y-5" data-testid="targets-page">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "#262262" }}>Targets &amp; KPIs</h1>
-        <p className="text-sm text-slate-500 mt-1">Configurable KPI library, management-approved targets, revision history and weighted scorecards. No figures are pre-filled.</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">Targets &amp; KPIs</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">Configurable KPI library, management-approved targets, revision history and weighted scorecards.</p>
       </div>
-      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto" data-testid="targets-tabs">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto fe-scroll pb-px" data-testid="targets-tabs">
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setParams({ tab: t.id })} data-testid={`targets-tab-${t.id}`}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${tab === t.id ? "border-[#264494] text-[#264494]" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{t.label}</button>
+            className={`px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${tab === t.id ? "border-[#264494] text-[#264494] font-semibold" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{t.label}</button>
         ))}
       </div>
       {tab === "scorecard" && <ScorecardTab employees={employees} />}

@@ -74,16 +74,16 @@ export default function Opportunities() {
 
   return (
     <div className="space-y-6" data-testid="opps-page">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "#262262" }}>Opportunities</h1>
-          <p className="text-sm text-slate-500 mt-1">Primary owner + supporting contributors with credit split. Total share never exceeds order value.</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">Opportunities</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Primary owner + supporting contributors with credit split. Total share never exceeds order value.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="flex border border-slate-200 rounded-md overflow-hidden text-sm" data-testid="opp-view-toggle">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex border border-slate-200 rounded-md overflow-hidden text-sm shrink-0" data-testid="opp-view-toggle">
             {["board", "list"].map((v) => <button key={v} onClick={() => setView(v)} data-testid={`opp-view-${v}`} className={`px-3 py-1.5 ${view === v ? "bg-[#264494] text-white" : "bg-white text-slate-600"}`}>{v === "board" ? "Board" : "List"}</button>)}
           </div>
-          {canManage && <button className="fe-btn-primary" onClick={openCreate} data-testid="btn-new-opp">+ New opportunity</button>}
+          {canManage && <button className="fe-btn-primary text-xs sm:text-sm shrink-0" onClick={openCreate} data-testid="btn-new-opp">+ New opportunity</button>}
         </div>
       </div>
 
@@ -125,9 +125,9 @@ export default function Opportunities() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <form onSubmit={save} className="bg-white rounded-xl shadow-xl max-w-2xl w-full my-8 p-6 border border-slate-200" data-testid="opp-form">
-            <h2 className="text-xl font-bold" style={{ color: "#262262" }}>{editing ? "Edit opportunity" : "New opportunity"}</h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
+          <form onSubmit={save} className="bg-white rounded-2xl shadow-xl max-w-2xl w-full my-4 sm:my-8 p-4 sm:p-6 border border-slate-200" data-testid="opp-form">
+            <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#262262" }}>{editing ? "Edit opportunity" : "New opportunity"}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="md:col-span-2"><label className="fe-kpi-label">Title</label><input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="fe-input mt-1" data-testid="opp-title"/></div>
               <div><label className="fe-kpi-label">Account</label><input required value={form.account_name} onChange={(e) => setForm({ ...form, account_name: e.target.value })} className="fe-input mt-1"/></div>
