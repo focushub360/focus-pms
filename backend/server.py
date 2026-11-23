@@ -12,8 +12,10 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pymongo.errors import ServerSelectionTimeoutError
 from pydantic import BaseModel, EmailStr, Field
 
 ROOT = Path(__file__).parent
@@ -52,23 +54,60 @@ app = FastAPI(
 api = APIRouter(prefix="/api")
 
 # CORS Configuration
-_cors_env = os.environ.get("CORS_ORIGINS", "*").strip()
-if _cors_env == "*":
-    _allowed_origins = ["*"]
-else:
-    _allowed_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+_local_defaults = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+_cors_env = os.environ.get("CORS_ORIGINS", "").strip()
+_allowed_origins = list(set(_local_defaults + [o.strip() for o in _cors_env.split(",") if o.strip() and o.strip() != "*"]))
 
 _app_public_url = os.environ.get("APP_PUBLIC_URL", "").strip().rstrip("/")
-if _app_public_url and _app_public_url not in _allowed_origins and "*" not in _allowed_origins:
+if _app_public_url and _app_public_url not in _allowed_origins and _app_public_url != "*":
     _allowed_origins.append(_app_public_url)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"^https?://.*",
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+
+def _cors_headers(request: Request) -> dict:
+    origin = request.headers.get("origin") or "http://localhost:3000"
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "*",
+    }
+
+
+@app.exception_handler(ServerSelectionTimeoutError)
+async def mongo_timeout_handler(request: Request, exc: ServerSelectionTimeoutError):
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Database connection timed out. Please ensure your IP address is whitelisted in MongoDB Atlas Network Access."},
+        headers=_cors_headers(request),
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    msg = str(exc)
+    if "No replica set members" in msg or "ServerSelectionTimeout" in msg or "SSL handshake failed" in msg:
+        msg = "Database connection timed out. Please ensure your IP address is whitelisted in MongoDB Atlas Network Access."
+    logger.error("Server exception on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": msg},
+        headers=_cors_headers(request),
+    )
 
 
 def strip_sensitive(u: dict) -> dict:

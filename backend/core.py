@@ -25,9 +25,9 @@ DB_NAME = os.environ.get("DB_NAME", "focus_pms")
 # Production-ready Motor client configuration with connection pooling & timeouts
 client: AsyncIOMotorClient = AsyncIOMotorClient(
     MONGO_URL,
-    serverSelectionTimeoutMS=5000,
-    connectTimeoutMS=5000,
-    socketTimeoutMS=30000,
+    serverSelectionTimeoutMS=int(os.environ.get("MONGO_TIMEOUT_MS", "3000")),
+    connectTimeoutMS=int(os.environ.get("MONGO_TIMEOUT_MS", "3000")),
+    socketTimeoutMS=15000,
     maxPoolSize=int(os.environ.get("MONGO_MAX_POOL_SIZE", "50")),
     minPoolSize=int(os.environ.get("MONGO_MIN_POOL_SIZE", "5")),
     maxIdleTimeMS=45000,
