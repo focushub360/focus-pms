@@ -21,19 +21,73 @@ export default function AcceptInvite() {
       nav("/login");
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Invitation invalid");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "#F8F9FA" }}>
-      <form onSubmit={submit} className="w-full max-w-md bg-white rounded-xl border border-slate-200 p-8 shadow-sm" data-testid="accept-invite-form">
-        <h2 className="text-2xl font-bold" style={{ color: "#262262" }}>Activate your account</h2>
-        <p className="text-sm text-slate-500 mt-1">Create a secure password for your Focus PMS account.</p>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mt-6">New Password</label>
-        <input type="password" required value={p1} onChange={(e) => setP1(e.target.value)} className="fe-input mt-1" data-testid="ai-p1" />
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mt-4">Confirm Password</label>
-        <input type="password" required value={p2} onChange={(e) => setP2(e.target.value)} className="fe-input mt-1" data-testid="ai-p2" />
-        <button type="submit" disabled={busy} className="fe-btn-primary mt-6 w-full" data-testid="ai-submit">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#F8F9FA]">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md"
+        data-testid="accept-invite-form"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <img
+            src="/logo.png"
+            alt="TaskBoard"
+            className="h-10 w-10 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200"
+          />
+          <div>
+            <div className="font-bold text-xl text-[#262262] leading-tight">TaskBoard</div>
+            <div className="text-[11px] text-slate-500 font-medium">Account Activation</div>
+          </div>
+        </div>
+
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Activate your account</h2>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">Create a secure password for your TaskBoard account.</p>
+
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+              New Password (min 8 characters)
+            </label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={p1}
+              onChange={(e) => setP1(e.target.value)}
+              className="fe-input"
+              data-testid="ai-p1"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={p2}
+              onChange={(e) => setP2(e.target.value)}
+              className="fe-input"
+              data-testid="ai-p2"
+              placeholder="••••••••"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="fe-btn-primary mt-6 w-full py-2.5 font-semibold shadow-xs"
+          data-testid="ai-submit"
+        >
           {busy ? "Activating…" : "Activate account"}
         </button>
       </form>

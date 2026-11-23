@@ -11,7 +11,7 @@ function DepartmentSummary({ d }) {
   return (
     <div className="space-y-6" data-testid="department-summary">
       <div className="text-xs text-slate-500 bg-[#DCF3F8] rounded-md px-3 py-2">Department-level summary · {d.team_size} sales contributors. Individual employee figures are visible only to HOD and management.</div>
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <KpiCard label="Department Target" value={fmtINR(d.department_target_inr)} testid="sum-target" />
         <KpiCard label="Confirmed Sales" value={fmtINR(d.confirmed_won_inr)} sub={`${d.won_count} order(s)`} accent="#10B981" testid="sum-confirmed" />
         <KpiCard label="Achievement" value={d.achievement_pct === null ? "—" : `${d.achievement_pct}%`} accent="#F19A2F" testid="sum-achievement" />
@@ -60,7 +60,7 @@ export default function DepartmentPanel({ filters, onOpenEmployee }) {
         <Select value={cat} onChange={setCat} testid="dept-filter-category" options={[{ value: "", label: "All service categories" }, ...d.categories.map((c) => ({ value: c, label: c }))]} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3" data-testid="dept-kpis">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3" data-testid="dept-kpis">
         <KpiCard label="Department Target" value={fmtINR(d.department_target_inr)} sub={d.department_target_source === "DEPARTMENT" ? "Approved dept target" : d.department_target_source ? "Sum of individual targets" : "Not set"} testid="dept-target" />
         <KpiCard label="Confirmed Sales" value={fmtINR(d.confirmed_won_inr)} sub={`${d.won_count} order(s)`} accent="#10B981" testid="dept-confirmed" />
         <KpiCard label="Achievement" value={d.achievement_pct === null ? "—" : `${d.achievement_pct}%`} accent="#F19A2F" testid="dept-achievement" />

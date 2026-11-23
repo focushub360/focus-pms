@@ -1,10 +1,12 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { GlobalSearch, Notifications } from "@/components/HeaderTools";
-import { hasAnyPerm, hasPerm } from "@/lib/api";
+import { hasAnyPerm } from "@/lib/api";
 import {
-  LayoutDashboard, Users, Target, Briefcase, Megaphone,
-  TrendingUp, Building2, ScrollText, LogOut, Settings, UserPlus, CalendarDays, ClipboardList, BarChart3
+  LayoutDashboard, Target, Briefcase, Megaphone,
+  TrendingUp, Building2, ScrollText, LogOut, UserPlus,
+  CalendarDays, ClipboardList, BarChart3, Menu, X, ChevronRight, User
 } from "lucide-react";
 
 const NAV = [
@@ -24,72 +26,317 @@ const NAV = [
 export default function Shell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close mobile drawer whenever route changes
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
+
+  // Lock background scroll when drawer is open on mobile
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
 
   const visible = NAV.filter((item) => !item.perms || hasAnyPerm(user, item.perms));
 
+  // High-frequency navigation targets for bottom tab bar on mobile
+  const bottomNavItems = [
+    { to: "/app/dashboard", label: "Dash", icon: LayoutDashboard },
+    { to: "/app/opportunities", label: "Opps", icon: TrendingUp },
+    { to: "/app/daily-activity", label: "Daily", icon: ClipboardList },
+    { to: "/app/calendar", label: "Calendar", icon: CalendarDays },
+  ];
+
   return (
-    <div className="min-h-screen flex" style={{ background: "#F8F9FA" }}>
-      <aside className="fe-sidebar w-64 flex flex-col fe-scroll" data-testid="app-sidebar">
-        <div className="fe-sidebar-brand h-16 flex items-center gap-3 px-4">
-          <div className="fe-brand-gear">FE</div>
-          <div>
-            <div className="text-white font-bold text-sm leading-tight">Focus Engineering</div>
-            <div className="text-[11px] uppercase tracking-wider" style={{ color: "#51C5DC" }}>PMS</div>
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F8F9FA] text-[#0F172A]">
+      {/* ────────────────── DESKTOP SIDEBAR (>= 1024px) ────────────────── */}
+      <aside
+        className="hidden lg:flex w-64 flex-col fe-sidebar fe-scroll sticky top-0 h-screen shrink-0 border-r border-[#342F7C] z-30"
+        data-testid="app-sidebar"
+      >
+        {/* Brand Header */}
+        <div className="fe-sidebar-brand h-16 flex items-center gap-3 px-4 shrink-0">
+          <img
+            src="/logo.png"
+            alt="TaskBoard Logo"
+            className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1 shrink-0 border border-white/15"
+          />
+          <div className="min-w-0">
+            <div className="text-white font-bold text-base tracking-tight truncate leading-tight">
+              TaskBoard
+            </div>
+            <div className="text-[10px] uppercase font-semibold tracking-widest text-[#51C5DC] truncate">
+              Performance Hub
+            </div>
           </div>
         </div>
-        <nav className="flex-1 py-4 px-2 space-y-1">
+
+        {/* Navigation Items */}
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto fe-scroll">
           {visible.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               data-testid={`nav-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
               className={({ isActive }) =>
-                `fe-nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-sm ${isActive ? "fe-nav-item-active" : ""}`
+                `fe-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                  isActive
+                    ? "fe-nav-item-active shadow-sm font-semibold"
+                    : "hover:bg-[#322D7A]/80 text-slate-300"
+                }`
               }
             >
-              <item.icon size={18} />
-              <span>{item.label}</span>
+              <item.icon size={18} className="shrink-0" />
+              <span className="truncate">{item.label}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="px-2 pb-4">
+
+        {/* User Card & Sign out */}
+        <div className="p-3 border-t border-[#342F7C]/60 shrink-0 bg-[#1E1A4F]/50">
+          <div
+            onClick={() => navigate("/app/profile")}
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors mb-1.5"
+            title="View Profile"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#264494] text-white flex items-center justify-center font-bold text-xs shrink-0 border border-white/20">
+              {(user?.name || "?").slice(0, 1).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold text-white truncate">{user?.name}</div>
+              <div className="text-[11px] text-slate-400 truncate">{user?.designation || "Team Member"}</div>
+            </div>
+          </div>
           <button
             onClick={logout}
             data-testid="logout-btn"
-            className="fe-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-rose-300 hover:text-white hover:bg-rose-500/20 transition-all"
           >
-            <LogOut size={18} /> <span>Sign out</span>
+            <LogOut size={15} /> <span>Sign out</span>
           </button>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6" data-testid="app-header">
-          <div>
-            <div className="text-xs uppercase tracking-wider text-slate-500">Sales &amp; Marketing Performance Management</div>
-            <div className="text-base font-semibold" style={{ color: "#262262" }}>Focus PMS Console</div>
+      {/* ────────────────── MOBILE & TABLET TOP HEADER (< 1024px) ────────────────── */}
+      <header
+        className="lg:hidden h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-4 sticky top-0 z-30 shadow-xs"
+        data-testid="mobile-app-header"
+      >
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="p-1.5 sm:p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Open menu"
+            data-testid="mobile-menu-btn"
+          >
+            <Menu size={22} />
+          </button>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/app/dashboard")}>
+            <img
+              src="/logo.png"
+              alt="TaskBoard Logo"
+              className="h-8 w-8 object-contain rounded-md shrink-0 shadow-2xs"
+            />
+            <span className="font-bold text-base sm:text-lg text-[#262262] tracking-tight">
+              TaskBoard
+            </span>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1 sm:gap-2">
+          <GlobalSearch />
+          <Notifications />
+          <div
+            className="w-8 h-8 rounded-full bg-[#264494] text-white flex items-center justify-center font-bold text-xs cursor-pointer ml-1 shadow-2xs"
+            onClick={() => navigate("/app/profile")}
+            title="Profile"
+          >
+            {(user?.name || "?").slice(0, 1).toUpperCase()}
+          </div>
+        </div>
+      </header>
+
+      {/* ────────────────── MOBILE SLIDE-OVER DRAWER (< 1024px) ────────────────── */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setDrawerOpen(false)}
+          />
+
+          {/* Drawer content */}
+          <div className="relative w-72 sm:w-80 max-w-[85vw] bg-[#262262] text-white flex flex-col h-full shadow-2xl z-10 fe-scroll">
+            {/* Drawer Header */}
+            <div className="h-16 flex items-center justify-between px-4 bg-[#1E1A4F] border-b border-[#342F7C]">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/logo.png"
+                  alt="TaskBoard"
+                  className="h-9 w-9 object-contain rounded-lg bg-white/10 p-1 border border-white/20"
+                />
+                <div>
+                  <div className="font-bold text-base text-white leading-tight">TaskBoard</div>
+                  <div className="text-[10px] uppercase font-semibold tracking-wider text-[#51C5DC]">
+                    Enterprise PMS
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* User Profile Banner in Drawer */}
+            <div
+              onClick={() => {
+                setDrawerOpen(false);
+                navigate("/app/profile");
+              }}
+              className="p-3.5 mx-2 my-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-[#51C5DC] text-[#262262] flex items-center justify-center font-bold text-sm shrink-0">
+                  {(user?.name || "?").slice(0, 1).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-white truncate">{user?.name}</div>
+                  <div className="text-[11px] text-slate-300 truncate">{user?.designation || "Team Member"}</div>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-slate-400 shrink-0" />
+            </div>
+
+            {/* Navigation links */}
+            <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto fe-scroll">
+              <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-widest text-[#51C5DC]">
+                Navigation
+              </div>
+              {visible.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setDrawerOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-[#264494] text-white shadow-sm font-semibold"
+                        : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    }`
+                  }
+                >
+                  <item.icon size={18} className="shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* Drawer Footer with Logout */}
+            <div className="p-3 border-t border-[#342F7C] bg-[#1E1A4F]/80 pb-safe">
+              <button
+                onClick={() => {
+                  setDrawerOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 transition-all"
+              >
+                <LogOut size={16} /> <span>Sign out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────── MAIN CONTENT AREA ────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Desktop Header (>= 1024px) */}
+        <header
+          className="hidden lg:flex h-16 bg-white border-b border-slate-200 items-center justify-between px-6 sticky top-0 z-20 shadow-2xs"
+          data-testid="app-header"
+        >
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+              Performance &amp; Task Management
+            </div>
+            <div className="text-base font-bold text-[#262262]">TaskBoard Console</div>
+          </div>
+
           <div className="flex items-center gap-4">
             <GlobalSearch />
             <Notifications />
-            <div className="text-xs text-slate-500 hidden lg:block">FY 2026-27</div>
+            <div className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              FY 2026-27
+            </div>
             <div
-              className="flex items-center gap-3 cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer pl-2 border-l border-slate-200 hover:opacity-90 transition-opacity"
               data-testid="user-menu"
               onClick={() => navigate("/app/profile")}
             >
-              <div className="w-9 h-9 rounded-full bg-[#264494] text-white flex items-center justify-center font-semibold text-sm">
-                {(user?.name || "?").slice(0, 1)}
+              <div className="w-9 h-9 rounded-full bg-[#264494] text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                {(user?.name || "?").slice(0, 1).toUpperCase()}
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold text-slate-800">{user?.name}</div>
-                <div className="text-xs text-slate-500">{user?.designation}</div>
+                <div className="text-sm font-semibold text-slate-800 leading-tight">{user?.name}</div>
+                <div className="text-xs text-slate-500 leading-tight">{user?.designation}</div>
               </div>
             </div>
           </div>
         </header>
-        <main className="flex-1 p-6 lg:p-8 overflow-auto">{children}</main>
+
+        {/* Page Content Viewport */}
+        <main className="flex-1 p-3.5 sm:p-5 lg:p-8 pb-24 lg:pb-8 max-w-full overflow-x-hidden">
+          {children}
+        </main>
       </div>
+
+      {/* ────────────────── MOBILE BOTTOM NAVIGATION BAR (< 1024px) ────────────────── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-lg px-2 py-1.5 flex justify-around items-center pb-safe"
+        data-testid="mobile-bottom-nav"
+      >
+        {bottomNavItems.map((item) => {
+          const isActive = location.pathname.startsWith(item.to);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-all min-w-[56px] ${
+                isActive
+                  ? "text-[#264494] scale-105"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <item.icon size={20} className={isActive ? "text-[#264494]" : "text-slate-500"} />
+              <span className="mt-0.5">{item.label}</span>
+            </NavLink>
+          );
+        })}
+
+        {/* More / Menu Drawer Toggle */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-all min-w-[56px] ${
+            drawerOpen ? "text-[#264494]" : "text-slate-500 hover:text-slate-800"
+          }`}
+          aria-label="Open full menu"
+        >
+          <Menu size={20} className={drawerOpen ? "text-[#264494]" : "text-slate-500"} />
+          <span className="mt-0.5">More</span>
+        </button>
+      </nav>
     </div>
   );
 }

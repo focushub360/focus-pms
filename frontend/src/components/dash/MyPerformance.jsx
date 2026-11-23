@@ -51,7 +51,7 @@ export default function MyPerformance({ userId, filters }) {
         {sc.overall_score !== null && <div className="text-right"><div className="fe-kpi-label">Weighted KPI score</div><div className="text-2xl font-bold text-[#264494]" data-testid="overall-score">{sc.overall_score}%</div></div>}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" data-testid="my-kpi-cards">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" data-testid="my-kpi-cards">
         <KpiCard label="Sales Target" value={fmtINR(m.target_inr)} sub={m.target_inr ? "Approved" : "Not yet approved"} testid="card-target" />
         <KpiCard label="Confirmed Sales" value={fmtINR(m.confirmed_won_inr)} sub={`${m.won_count} order(s)`} accent="#10B981" testid="card-confirmed" />
         <KpiCard label="Achievement" value={m.achievement_pct === null ? "—" : `${m.achievement_pct}%`} sub="Confirmed ÷ target" accent="#F19A2F" testid="card-achievement" />

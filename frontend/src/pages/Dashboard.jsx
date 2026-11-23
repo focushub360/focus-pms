@@ -31,22 +31,36 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5" data-testid="dashboard-page">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "#262262" }}>Welcome, {user?.name?.split(" ")[0]}</h1>
-          <p className="text-sm text-slate-500 mt-1">All figures are calculated live from recorded opportunities, leads, activities and approved targets.</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#262262]">
+            Welcome, {user?.name?.split(" ")[0]}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Live figures from opportunities, leads, activities, and approved scorecards.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Select value={fy} onChange={() => {}} testid="filter-fy" options={[{ value: FY, label: "FY 2026–27" }]} />
           <Select value={period} onChange={setPeriod} testid="filter-period" options={periodOpts} />
           {tab === "employee" && <Select value={empId} onChange={setEmpId} testid="filter-employee" options={employees.map((e) => ({ value: e.id, label: e.name }))} />}
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-200" data-testid="dashboard-tabs">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto fe-scroll pb-px" data-testid="dashboard-tabs">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} data-testid={`dash-tab-${t.id}`}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t.id ? "border-[#264494] text-[#264494]" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{t.label}</button>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            data-testid={`dash-tab-${t.id}`}
+            className={`px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-px transition-colors shrink-0 whitespace-nowrap ${
+              tab === t.id
+                ? "border-[#264494] text-[#264494] font-semibold"
+                : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
 

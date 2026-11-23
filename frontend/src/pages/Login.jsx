@@ -23,70 +23,146 @@ export default function Login() {
       else nav("/app/dashboard");
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Login failed");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#F8F9FA" }}>
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white" style={{ background: "#262262" }}>
-        <div className="flex items-center gap-3">
-          <div className="fe-brand-gear">FE</div>
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F8F9FA]">
+      {/* ────────────────── DESKTOP BRANDING BANNER (>= 1024px) ────────────────── */}
+      <div
+        className="hidden lg:flex w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden"
+        style={{ background: "#262262" }}
+      >
+        <div className="flex items-center gap-3.5 z-10">
+          <img
+            src="/logo.png"
+            alt="TaskBoard"
+            className="h-12 w-12 object-contain bg-white/10 p-2 rounded-xl border border-white/20 shadow-md"
+          />
           <div>
-            <div className="font-bold text-lg">Focus Engineering</div>
-            <div className="text-[11px] uppercase tracking-widest" style={{ color: "#51C5DC" }}>PMS</div>
+            <div className="font-bold text-2xl tracking-tight text-white leading-tight">TaskBoard</div>
+            <div className="text-xs uppercase tracking-widest text-[#51C5DC] font-semibold">
+              Performance &amp; Management Hub
+            </div>
           </div>
         </div>
-        <div>
-          <h1 className="text-4xl font-bold leading-tight" style={{ letterSpacing: "-0.02em" }}>
-            Sales &amp; Marketing<br />Performance Management
+
+        <div className="z-10 max-w-lg my-auto py-12">
+          <h1 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-white">
+            Performance,<br />Tasks &amp; Growth<br />
+            <span className="text-[#51C5DC]">Unified.</span>
           </h1>
-          <p className="mt-5 text-[15px] text-slate-300 max-w-md">
-            One integrated workspace for the Focus Engineering Sales &amp; Marketing team —
-            opportunities, campaigns, targets, and management-level insight.
+          <p className="mt-5 text-base text-slate-300 leading-relaxed max-w-md">
+            One high-precision platform for the team — manage opportunities, target scorecards,
+            daily sales meetings, and real-time executive visibility.
           </p>
-          <div className="mt-10 grid grid-cols-3 gap-4 max-w-md">
-            <div className="p-4 rounded-lg" style={{ background: "#322D7A" }}>
-              <div className="text-xs uppercase tracking-wider" style={{ color: "#51C5DC" }}>Team</div>
-              <div className="text-xl font-bold mt-1">6+</div>
-              <div className="text-xs text-slate-300">Sales Contributors</div>
+
+          <div className="mt-8 grid grid-cols-3 gap-3.5 max-w-md">
+            <div className="p-3.5 rounded-xl bg-[#322D7A]/80 border border-white/10">
+              <div className="text-[11px] uppercase tracking-wider font-semibold text-[#51C5DC]">Team</div>
+              <div className="text-2xl font-bold mt-1 text-white">6+</div>
+              <div className="text-xs text-slate-300 truncate">Contributors</div>
             </div>
-            <div className="p-4 rounded-lg" style={{ background: "#322D7A" }}>
-              <div className="text-xs uppercase tracking-wider" style={{ color: "#51C5DC" }}>Dept</div>
-              <div className="text-xl font-bold mt-1">S&amp;M</div>
-              <div className="text-xs text-slate-300">Integrated Department</div>
+            <div className="p-3.5 rounded-xl bg-[#322D7A]/80 border border-white/10">
+              <div className="text-[11px] uppercase tracking-wider font-semibold text-[#51C5DC]">Dept</div>
+              <div className="text-2xl font-bold mt-1 text-white">S&amp;M</div>
+              <div className="text-xs text-slate-300 truncate">Sales &amp; Mktg</div>
             </div>
-            <div className="p-4 rounded-lg" style={{ background: "#322D7A" }}>
-              <div className="text-xs uppercase tracking-wider" style={{ color: "#51C5DC" }}>FY</div>
-              <div className="text-xl font-bold mt-1">26-27</div>
-              <div className="text-xs text-slate-300">Current Period</div>
+            <div className="p-3.5 rounded-xl bg-[#322D7A]/80 border border-white/10">
+              <div className="text-[11px] uppercase tracking-wider font-semibold text-[#51C5DC]">FY</div>
+              <div className="text-2xl font-bold mt-1 text-white">26-27</div>
+              <div className="text-xs text-slate-300 truncate">Current Period</div>
             </div>
           </div>
         </div>
-        <div className="text-xs text-slate-400">
-          © Focus Engineering. Internal performance management system.
+
+        <div className="text-xs text-slate-400 z-10 flex items-center justify-between">
+          <span>© TaskBoard. Enterprise performance workspace.</span>
+          <span>v1.0.0</span>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8">
-        <form onSubmit={submit} className="w-full max-w-md bg-white rounded-xl border border-slate-200 p-8 shadow-sm" data-testid="login-form">
-          <h2 className="text-2xl font-bold" style={{ color: "#262262" }}>Sign in</h2>
-          <p className="text-sm text-slate-500 mt-1">Use your official Focus Engineering email.</p>
+      {/* ────────────────── LOGIN FORM CARD (Mobile, Tablet, Desktop) ────────────────── */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 min-h-screen">
+        <form
+          onSubmit={submit}
+          className="w-full max-w-md bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-9 shadow-lg sm:shadow-md"
+          data-testid="login-form"
+        >
+          {/* Mobile & Tablet Logo Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <img
+              src="/logo.png"
+              alt="TaskBoard"
+              className="h-11 w-11 object-contain rounded-xl p-1 bg-slate-50 border border-slate-200 shadow-2xs shrink-0"
+            />
+            <div>
+              <div className="font-bold text-xl sm:text-2xl text-[#262262] leading-tight">
+                TaskBoard
+              </div>
+              <div className="text-xs text-slate-500 font-medium">
+                Sales &amp; Performance Management
+              </div>
+            </div>
+          </div>
 
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mt-6">Official Email</label>
-          <input
-            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@focusengineering.in" className="fe-input mt-1" data-testid="login-email"
-          />
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mt-4">Password</label>
-          <input
-            type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-            className="fe-input mt-1" data-testid="login-password"
-          />
-          <button type="submit" disabled={busy} className="fe-btn-primary mt-6 w-full" data-testid="login-submit">
-            {busy ? "Signing in…" : "Sign in"}
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Sign in</h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Enter your official email and password to access your dashboard.
+          </p>
+
+          <div className="mt-6 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                Official Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@focusengineering.in"
+                className="fe-input"
+                data-testid="login-email"
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="fe-input"
+                data-testid="login-password"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="fe-btn-primary mt-6 w-full py-2.5 text-sm font-semibold shadow-xs"
+            data-testid="login-submit"
+          >
+            {busy ? "Signing in…" : "Sign in to TaskBoard"}
           </button>
-          <div className="mt-4 flex justify-between text-xs">
-            <button type="button" onClick={() => nav("/forgot-password")} className="text-slate-500 hover:underline" data-testid="forgot-password-link">
+
+          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+            <button
+              type="button"
+              onClick={() => nav("/forgot-password")}
+              className="text-[#264494] font-medium hover:underline"
+              data-testid="forgot-password-link"
+            >
               Forgot password?
             </button>
             <span className="text-slate-400">Access by invitation only</span>
