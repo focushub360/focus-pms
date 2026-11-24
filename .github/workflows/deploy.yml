@@ -1,0 +1,67 @@
+name: Auto Deploy to Production (AWS Lightsail)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Build React Frontend
+        working-directory: frontend
+        env:
+          CI: false
+          DISABLE_ESLINT_PLUGIN: "true"
+          GENERATE_SOURCEMAP: "false"
+        run: |
+          yarn install --prefer-offline
+          yarn build
+
+      - name: Pull Latest Changes & Restart Backend on Lightsail
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/focus-pms
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose -f docker-compose.lightsail.yml restart backend
+
+      - name: Upload Frontend Build to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: "frontend/build/*"
+          target: "/home/ubuntu/focus-pms"
+          strip_components: 0
+
+      - name: Sync Build to Frontend Container & Reload Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/focus-pms
+            docker cp frontend/build/. focus-pms-frontend:/usr/share/nginx/html/
+            docker exec focus-pms-frontend nginx -s reload || docker restart focus-pms-frontend
+            echo "Deployment completed successfully!"
