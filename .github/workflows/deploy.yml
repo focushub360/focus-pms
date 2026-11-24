@@ -15,10 +15,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'yarn'
           cache-dependency-path: frontend/yarn.lock
 
@@ -29,7 +29,7 @@ jobs:
           DISABLE_ESLINT_PLUGIN: "true"
           GENERATE_SOURCEMAP: "false"
         run: |
-          yarn install --prefer-offline
+          yarn install --prefer-offline --ignore-engines
           yarn build
 
       - name: Pull Latest Changes & Restart Backend on Lightsail
