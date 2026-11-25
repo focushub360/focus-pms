@@ -14,7 +14,7 @@ from core import audit, db, now_iso
 
 router = APIRouter(prefix="/api")
 IST = ZoneInfo("Asia/Kolkata")
-TYPES = ["Meeting", "Customer Meeting", "Sales Call", "Follow-up", "Task", "Project Deadline", "Reminder"]
+TYPES = ["Meeting", "Customer Meeting", "Sales Call", "Follow-up", "Task", "Project Deadline", "Reminder", "Appointment"]
 STATUSES = ["Planned", "Completed", "Cancelled"]
 
 
@@ -110,6 +110,9 @@ class EventIn(BaseModel):
     all_day: bool = False
     visibility: str = "PRIVATE"
     status: str = "Planned"
+    priority: Optional[str] = "Normal"
+    metric_target: Optional[int] = None
+    metric_current: Optional[int] = None
     assigned_to: Optional[str] = None
     attendee_ids: list[str] = Field(default_factory=list)
     location: str = ""
@@ -120,6 +123,12 @@ class EventIn(BaseModel):
     opportunity_id: Optional[str] = None
     reminder_minutes: Optional[int] = Field(default=None, ge=0, le=10080)
     recurrence: Optional[RecurrenceIn] = None
+
+
+class TaskProgressIn(BaseModel):
+    status: Optional[str] = None
+    metric_current: Optional[int] = None
+    metric_target: Optional[int] = None
 
 
 def _validate(p: EventIn) -> None:
@@ -205,6 +214,26 @@ async def update_event(eid: str, payload: EventIn, scope: str = "this", user: di
     await db.activities.update_one({"id": eid}, {"$set": d})
     changed = {k: old.get(k) for k in d if k != "updated_at" and old.get(k) != d[k]}
     await audit(user, "ACTIVITY_UPDATED", "activity", eid, previous=changed, new={k: d[k] for k in changed})
+    return await db.activities.find_one({"id": eid}, {"_id": 0})
+
+
+@router.patch("/calendar/events/{eid}/task-progress")
+async def update_task_progress(eid: str, payload: TaskProgressIn, user: dict = Depends(get_current_user)):
+    old = await db.activities.find_one({"id": eid}, {"_id": 0})
+    if not old:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    if not can_edit(user, old) and not full_view(user):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this")
+    up = {"updated_at": now_iso()}
+    if payload.status:
+        up["status"] = payload.status
+        if payload.status == "Completed" and old.get("status") != "Completed":
+            up["completed_at"] = now_iso()
+    if payload.metric_current is not None:
+        up["metric_current"] = payload.metric_current
+    if payload.metric_target is not None:
+        up["metric_target"] = payload.metric_target
+    await db.activities.update_one({"id": eid}, {"$set": up})
     return await db.activities.find_one({"id": eid}, {"_id": 0})
 
 
