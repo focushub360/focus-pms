@@ -24,7 +24,7 @@ export default function Dashboard() {
   const [employees, setEmployees] = useState([]);
   const [empId, setEmpId] = useState("");
 
-  useEffect(() => { api.get("/meta/employees").then((r) => { setEmployees(r.data); setEmpId((p) => p || r.data.find((e) => e.id !== user.id)?.id || r.data[0]?.id || ""); }).catch(() => {}); }, [user.id]);
+  useEffect(() => { api.get("/meta/employees").then((r) => { setEmployees(r.data); setEmpId((p) => p || r.data.find((e) => e.id !== user.id)?.id || r.data[0]?.id || ""); }).catch(() => { }); }, [user.id]);
 
   const filters = { fy, month: period.startsWith("M:") ? period.slice(2) : "", quarter: period.startsWith("Q:") ? period.slice(2) : "" };
   const periodOpts = [{ value: "", label: "Full year" }, ...["Q1", "Q2", "Q3", "Q4"].map((q) => ({ value: `Q:${q}`, label: q })), ...MONTHS.map((m) => ({ value: `M:${m}`, label: `${monthLabel(m)} ${m.slice(0, 4)}` }))];
@@ -41,7 +41,7 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <Select value={fy} onChange={() => {}} testid="filter-fy" options={[{ value: FY, label: "FY 2026–27" }]} />
+          <Select value={fy} onChange={() => { }} testid="filter-fy" options={[{ value: FY, label: "FY 2026–27" }]} />
           <Select value={period} onChange={setPeriod} testid="filter-period" options={periodOpts} />
           {tab === "employee" && <Select value={empId} onChange={setEmpId} testid="filter-employee" options={employees.map((e) => ({ value: e.id, label: e.name }))} />}
         </div>
