@@ -42,7 +42,8 @@ jobs:
             cd /home/ubuntu/focus-pms
             git fetch origin main
             git reset --hard origin/main
-            docker compose -f docker-compose.lightsail.yml restart backend
+            docker compose -f docker-compose.lightsail.yml up -d --no-deps --build backend
+            docker image prune -f
 
       - name: Upload Frontend Build to Lightsail
         uses: appleboy/scp-action@v0.1.7
