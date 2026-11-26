@@ -1,12 +1,21 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Check, CheckSquare, Plus, Clock, Send, History, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { timeOf } from "./utils";
+import { keyOf, timeOf } from "./utils";
 
 export function getTaskTimeframe(t) {
-  if ((t.due_time || "").trim()) return t.due_time.trim();
   if ((t.timeframe || "").trim()) return t.timeframe.trim();
-  if (!t.all_day && t.start_at) return timeOf(t.start_at);
+  if ((t.due_date || "").trim() && (t.due_time || "").trim()) {
+    return `${t.due_date.trim()} ${t.due_time.trim()}`;
+  }
+  if ((t.due_time || "").trim()) {
+    const d = t.calendar_date || (t.start_at ? keyOf(t.start_at) : "");
+    return d ? `${d} ${t.due_time.trim()}` : t.due_time.trim();
+  }
+  if (!t.all_day && t.start_at) {
+    const d = t.calendar_date || keyOf(t.start_at);
+    return d ? `${d} ${timeOf(t.start_at)}` : timeOf(t.start_at);
+  }
   return "";
 }
 
@@ -24,12 +33,17 @@ export default function ActionChecklist({
   const [editingId, setEditingId] = useState(null);
   const [metricValue, setMetricValue] = useState(0);
   const [newTitle, setNewTitle] = useState("");
+  const [newDueDate, setNewDueDate] = useState(selectedDate || "");
   const [newDueTime, setNewDueTime] = useState("");
   const [newPriority, setNewPriority] = useState("High");
   const [newTarget, setNewTarget] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [formErr, setFormErr] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    setNewDueDate(selectedDate || "");
+  }, [selectedDate]);
 
   const validTasks = useMemo(() => tasks.filter((t) => Boolean(getTaskTimeframe(t))), [tasks]);
   const checkedCount = useMemo(
@@ -60,8 +74,8 @@ export default function ActionChecklist({
       setFormErr("Task description is required.");
       return;
     }
-    if (!newDueTime.trim()) {
-      setFormErr("A timeframe (due time) is required for submission eligibility.");
+    if (!newDueDate.trim() || !newDueTime.trim()) {
+      setFormErr("A timeframe (due date and time) is required for submission eligibility.");
       return;
     }
     onAddTask({
@@ -69,11 +83,13 @@ export default function ActionChecklist({
       priority: newPriority,
       metric_target: newTarget ? Number(newTarget) : null,
       metric_current: newTarget ? 0 : null,
+      due_date: newDueDate.trim(),
       due_time: newDueTime.trim(),
-      timeframe: `${selectedDate} ${newDueTime.trim()}`,
+      timeframe: `${newDueDate.trim()} ${newDueTime.trim()}`,
       activity_type: "Task",
     });
     setNewTitle("");
+    setNewDueDate(selectedDate || "");
     setNewDueTime("");
     setNewTarget("");
     setFormErr("");
@@ -115,6 +131,7 @@ export default function ActionChecklist({
           type="button"
           onClick={() => {
             setIsAdding(!isAdding);
+            setNewDueDate(selectedDate || "");
             setFormErr("");
           }}
           className="fe-btn-secondary text-xs px-2.5 py-1"
@@ -138,9 +155,18 @@ export default function ActionChecklist({
             data-testid="checklist-new-title"
             autoFocus
           />
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">Timeframe *</label>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              Timeframe (Due Date & Time) *
+            </label>
+            <div className="grid grid-cols-2 gap-1.5 text-xs">
+              <input
+                type="date"
+                value={newDueDate}
+                onChange={(e) => setNewDueDate(e.target.value)}
+                className="w-full px-2 py-1 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900"
+                data-testid="checklist-new-date"
+              />
               <input
                 type="time"
                 value={newDueTime}
@@ -149,6 +175,8 @@ export default function ActionChecklist({
                 data-testid="checklist-new-time"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-[96px_1fr_auto] items-end gap-1.5 text-xs">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">Priority</label>
               <select
@@ -162,15 +190,13 @@ export default function ActionChecklist({
                 <option value="Low">Low</option>
               </select>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
             <input
               type="number"
               min="1"
-              placeholder="Target count (optional)"
+              placeholder="Target (opt.)"
               value={newTarget}
               onChange={(e) => setNewTarget(e.target.value)}
-              className="flex-1 px-2 py-1 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900"
+              className="w-full px-2 py-1 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900"
             />
             <button
               type="submit"

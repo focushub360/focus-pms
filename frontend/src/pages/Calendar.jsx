@@ -158,7 +158,7 @@ export default function CalendarPage() {
     return filteredEvents
       .filter((e) => {
         const isTask = e.activity_type === "Task" || e.metric_target !== undefined;
-        const eDate = keyOf(e.start_at);
+        const eDate = e.calendar_date || keyOf(e.start_at);
         return isTask && eDate === selectedDate;
       })
       .sort((a, b) => {
@@ -203,21 +203,25 @@ export default function CalendarPage() {
     }).catch(() => {});
   }, []);
 
-  // Persist new checklist task to backend with defined timeframe
+  // Persist new checklist task to backend with defined timeframe (due date + due time)
   const handleAddChecklistTask = useCallback(async (taskData) => {
-    const due = taskData.due_time || "";
+    const dueDate = taskData.due_date || selectedDate;
+    const dueTime = taskData.due_time || "";
+    const endDate = dueDate >= selectedDate ? dueDate : selectedDate;
     const tempId = `task-${Date.now()}`;
     const newTask = {
       id: tempId,
       title: taskData.title,
       activity_type: "Task",
       priority: taskData.priority || "High",
-      due_time: due,
-      timeframe: taskData.timeframe || (due ? `${selectedDate} ${due}` : ""),
+      calendar_date: selectedDate,
+      due_date: dueDate,
+      due_time: dueTime,
+      timeframe: taskData.timeframe || (dueTime ? `${dueDate} ${dueTime}` : ""),
       metric_target: taskData.metric_target,
       metric_current: taskData.metric_current,
-      start_at: `${selectedDate}T${due || "17:00"}:00+05:30`,
-      end_at: `${selectedDate}T${due || "17:30"}:00+05:30`,
+      start_at: `${selectedDate}T${dueTime || "17:00"}:00+05:30`,
+      end_at: `${endDate}T${dueTime || "17:00"}:00+05:30`,
       all_day: false,
       status: "Planned",
       visibility: "PRIVATE",

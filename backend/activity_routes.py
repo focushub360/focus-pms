@@ -111,8 +111,10 @@ class EventIn(BaseModel):
     visibility: str = "PRIVATE"
     status: str = "Planned"
     priority: Optional[str] = "Normal"
+    due_date: Optional[str] = None
     due_time: Optional[str] = None
     timeframe: Optional[str] = None
+    calendar_date: Optional[str] = None
     metric_target: Optional[int] = None
     metric_current: Optional[int] = None
     assigned_to: Optional[str] = None
