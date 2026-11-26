@@ -176,7 +176,10 @@ export default function CalendarPage() {
     setBackendEvents(updater);
     setCustomTasks(updater);
 
-    api.patch(`/calendar/events/${taskId}/task-progress`, { status: nextStatus }).catch(() => {});
+    const isLocalOnly = /^(proto-|rel-|task-)/.test(String(taskId));
+    if (!isLocalOnly) {
+      api.patch(`/calendar/events/${taskId}/task-progress`, { status: nextStatus }).catch(() => {});
+    }
     toast.success(nextStatus === "Completed" ? "Marked completed" : "Marked open");
   }, []);
 
@@ -197,10 +200,13 @@ export default function CalendarPage() {
     setBackendEvents(updater);
     setCustomTasks(updater);
 
-    api.patch(`/calendar/events/${taskId}/task-progress`, {
-      metric_current: currentVal,
-      status: isNowCompleted ? "Completed" : undefined,
-    }).catch(() => {});
+    const isLocalOnly = /^(proto-|rel-|task-)/.test(String(taskId));
+    if (!isLocalOnly) {
+      api.patch(`/calendar/events/${taskId}/task-progress`, {
+        metric_current: currentVal,
+        status: isNowCompleted ? "Completed" : undefined,
+      }).catch(() => {});
+    }
   }, []);
 
   // Persist new checklist task to backend with defined timeframe (due date + due time)
