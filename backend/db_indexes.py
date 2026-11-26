@@ -45,6 +45,7 @@ INDEX_SPECIFICATIONS = [
     ("activities", [("user_id", 1), ("start_at", 1)], {"name": "idx_activities_user_start"}),
     ("activities", [("activity_type", 1)], {"name": "idx_activities_type"}),
     ("activities", [("is_deleted", 1)], {"name": "idx_activities_is_deleted"}),
+    ("daily_task_submissions", [("user_id", 1), ("date", 1), ("submitted_at", -1)], {"name": "idx_daily_task_sub_user_date"}),
 
     # Sales CRM: Opportunities
     ("opportunities", [("primary_owner_id", 1)], {"name": "idx_opps_owner"}),

@@ -111,6 +111,8 @@ class EventIn(BaseModel):
     visibility: str = "PRIVATE"
     status: str = "Planned"
     priority: Optional[str] = "Normal"
+    due_time: Optional[str] = None
+    timeframe: Optional[str] = None
     metric_target: Optional[int] = None
     metric_current: Optional[int] = None
     assigned_to: Optional[str] = None
@@ -253,3 +255,126 @@ async def delete_event(eid: str, scope: str = "this", user: dict = Depends(get_c
     await db.activities.delete_one({"id": eid})
     await audit(user, "ACTIVITY_DELETED", "activity", eid, previous={"title": old["title"], "start_at": old["start_at"]})
     return {"ok": True, "deleted": 1}
+
+
+# ──────────────── DAILY TASK PROGRESS SUBMISSION (SRD) ────────────────
+class TaskSubmitItemIn(BaseModel):
+    task_id: str
+    description: str = Field(min_length=1, max_length=300)
+    timeframe: Optional[str] = None
+    priority: str = "Normal"
+    completed: bool = False
+
+
+class TaskSubmissionIn(BaseModel):
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    tasks: list[TaskSubmitItemIn] = Field(default_factory=list)
+
+
+@router.get("/calendar/tasks/submissions")
+async def list_task_submissions(
+    date: str,
+    user_id: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+):
+    uid = user_id or user["id"]
+    if uid != user["id"] and not full_view(user):
+        raise HTTPException(status_code=403, detail="Not authorised to view another employee's task submissions")
+    history = [
+        s async for s in db.daily_task_submissions.find(
+            {"user_id": uid, "date": date},
+            {"_id": 0},
+        ).sort("submitted_at", -1)
+    ]
+    return {"date": date, "user_id": uid, "latest": history[0] if history else None, "history": history}
+
+
+@router.get("/calendar/tasks/submissions/review")
+async def review_task_submissions(
+    date: Optional[str] = None,
+    user_id: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+):
+    flt: dict = {}
+    if date:
+        flt["date"] = date
+    if not full_view(user):
+        flt["user_id"] = user["id"]
+    elif user_id:
+        flt["user_id"] = user_id
+    return [s async for s in db.daily_task_submissions.find(flt, {"_id": 0}).sort("submitted_at", -1).limit(200)]
+
+
+@router.post("/calendar/tasks/submit")
+async def submit_daily_task_progress(
+    payload: TaskSubmissionIn,
+    user: dict = Depends(get_current_user),
+):
+    valid_tasks = [t for t in payload.tasks if (t.timeframe or "").strip()]
+    if not valid_tasks:
+        raise HTTPException(
+            status_code=400,
+            detail="Add at least one valid task with a defined timeframe before submitting daily progress.",
+        )
+
+    total_tasks = len(valid_tasks)
+    completed_tasks = sum(1 for t in valid_tasks if t.completed)
+    uncleared_tasks = total_tasks - completed_tasks
+    completion_pct = round((completed_tasks / total_tasks) * 100.0, 2)
+    submitted_at = now_iso()
+
+    # Persist checkbox completion states back on matching owned calendar activities (KPI actuals remain untouched)
+    for t in valid_tasks:
+        existing = await db.activities.find_one({"id": t.task_id}, {"_id": 0})
+        if existing and can_edit(user, existing):
+            next_status = "Completed" if t.completed else "Planned"
+            upd = {"status": next_status, "updated_at": submitted_at}
+            if next_status == "Completed" and existing.get("status") != "Completed":
+                upd["completed_at"] = submitted_at
+            await db.activities.update_one({"id": t.task_id}, {"$set": upd})
+
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_name": user["name"],
+        "date": payload.date,
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "uncleared_tasks": uncleared_tasks,
+        "completion_pct": completion_pct,
+        "submitted_at": submitted_at,
+        "tasks": [
+            {
+                "task_id": t.task_id,
+                "description": t.description.strip(),
+                "timeframe": (t.timeframe or "").strip(),
+                "priority": t.priority or "Normal",
+                "completed": bool(t.completed),
+            }
+            for t in valid_tasks
+        ],
+    }
+    await db.daily_task_submissions.insert_one(doc)
+    doc.pop("_id", None)
+
+    await audit(
+        user,
+        "DAILY_TASK_PROGRESS_SUBMITTED",
+        "daily_task_submission",
+        doc["id"],
+        details={
+            "date": payload.date,
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "uncleared_tasks": uncleared_tasks,
+            "completion_pct": completion_pct,
+        },
+    )
+
+    history = [
+        s async for s in db.daily_task_submissions.find(
+            {"user_id": user["id"], "date": payload.date},
+            {"_id": 0},
+        ).sort("submitted_at", -1)
+    ]
+    return {"latest": doc, "history": history}

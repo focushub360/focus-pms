@@ -16,6 +16,7 @@ import httpx
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
+import activity_routes as act_mod
 import auth as auth_mod
 import alerts_routes as alerts_mod
 import core as core_mod
@@ -160,6 +161,13 @@ class FakeCollection:
         self.docs.append(d)
         return type("Res", (), {"inserted_id": d["_id"]})()
 
+    async def insert_many(self, docs: list[dict]):
+        ids = []
+        for doc in docs:
+            res = await self.insert_one(doc)
+            ids.append(res.inserted_id)
+        return type("Res", (), {"inserted_ids": ids})()
+
     async def update_one(self, flt: dict, upd: dict, upsert: bool = False):
         for d in self.docs:
             if _match(d, flt):
@@ -224,7 +232,7 @@ class FakeDB:
 
 def install_fake_db() -> FakeDB:
     fake = FakeDB()
-    for mod in (core_mod, auth_mod, alerts_mod, srv_mod, kpi_mod, dash_mod, p2_mod, cc_mod, mkpi_mod, rep_mod):
+    for mod in (core_mod, auth_mod, alerts_mod, act_mod, srv_mod, kpi_mod, dash_mod, p2_mod, cc_mod, mkpi_mod, rep_mod):
         if hasattr(mod, "db"):
             mod.db = fake
     auth_mod.set_db(fake)
@@ -411,7 +419,12 @@ async def run_tests():
         assert ksheet["template_code"] == "SALES"
         assert ksheet["active_weight_total"] == 100.0
 
-        # Log separate weekly progress (does NOT auto-sum into percentage KPIs)
+        # Log separate weekly progress + weekly progress notes
+        wn = await client.put("/api/monthly-kpis/weekly-notes", headers=H(tok["kriti"]), json={
+            "month": "2026-11", "notes": {"w1": "Reached out to 15 prospects", "w2": "Sent 3 proposals"},
+        })
+        assert wn.status_code == 200 and wn.json()["weekly_notes"]["w1"] == "Reached out to 15 prospects"
+
         wlog = await client.post("/api/monthly-kpis/weekly-log", headers=H(tok["kriti"]), json={
             "month": "2026-11", "kpi_code": "SP_FU_COMP", "week_label": "Week 1", "progress_value": 92, "remarks": "W1 check",
         })
@@ -533,6 +546,58 @@ async def run_tests():
 
         notif_types = {n["type"] for n in db.notifications.docs}
         assert {"SCORECARD_SUBMITTED", "SCORECARD_CONFIRMED", "SCORECARD_RETURNED", "SCORECARD_APPROVED", "KPI_TOGGLE_REQUEST"} <= notif_types
+
+        # 13. Daily Task Planning, Execution & Progress Submission (SRD AC-01 to AC-10)
+        vijay_sheet_before = await client.get("/api/monthly-kpis?month=2026-11&user_id=u-vijay", headers=H(tok["vijay"]))
+        vijay_score_before = vijay_sheet_before.json()["overall_score"]
+
+        # AC-01 / AC-02: No valid tasks or task without timeframe -> 400
+        assert (await client.post("/api/calendar/tasks/submit", headers=H(tok["vijay"]), json={"date": "2026-11-26", "tasks": []})).status_code == 400
+        assert (await client.post("/api/calendar/tasks/submit", headers=H(tok["vijay"]), json={
+            "date": "2026-11-26", "tasks": [{"task_id": "t-no-tf", "description": "No timeframe task", "timeframe": "", "completed": True}],
+        })).status_code == 400
+
+        # Create real calendar task for Vijay
+        rtask = await client.post("/api/calendar/events", headers=H(tok["vijay"]), json={
+            "title": "Prepare MIS report", "activity_type": "Task", "due_time": "11:00",
+            "timeframe": "2026-11-26 11:00", "priority": "High",
+            "start_at": "2026-11-26T11:00:00+05:30", "end_at": "2026-11-26T11:30:00+05:30",
+        })
+        assert rtask.status_code == 200
+        tid1 = rtask.json()["id"]
+
+        # AC-04: Valid tasks exist, 0 checked -> accepted, 0%
+        tasks_10 = [{"task_id": tid1, "description": "Prepare MIS report", "timeframe": "11:00", "priority": "High", "completed": False}] + [
+            {"task_id": f"t-{i}", "description": f"Task {i}", "timeframe": f"{12 + (i % 6)}:00", "priority": "Medium", "completed": False}
+            for i in range(2, 11)
+        ]
+        rs0 = await client.post("/api/calendar/tasks/submit", headers=H(tok["vijay"]), json={"date": "2026-11-26", "tasks": tasks_10})
+        assert rs0.status_code == 200, rs0.text
+        l0 = rs0.json()["latest"]
+        assert l0["total_tasks"] == 10 and l0["completed_tasks"] == 0 and l0["uncleared_tasks"] == 10 and l0["completion_pct"] == 0.0
+
+        # AC-05 / AC-09: 3 of 10 checked -> 30%, prior submission retained in history
+        for i in range(3):
+            tasks_10[i]["completed"] = True
+        rs3 = await client.post("/api/calendar/tasks/submit", headers=H(tok["vijay"]), json={"date": "2026-11-26", "tasks": tasks_10})
+        assert rs3.status_code == 200
+        l3 = rs3.json()["latest"]
+        assert l3["completed_tasks"] == 3 and l3["uncleared_tasks"] == 7 and l3["completion_pct"] == 30.0
+        assert len(rs3.json()["history"]) == 2
+
+        # AC-06: 10 of 10 checked -> 100%, uncleared = 0, history count = 3
+        for t in tasks_10:
+            t["completed"] = True
+        rs10 = await client.post("/api/calendar/tasks/submit", headers=H(tok["vijay"]), json={"date": "2026-11-26", "tasks": tasks_10})
+        assert rs10.status_code == 200
+        l10 = rs10.json()["latest"]
+        assert l10["completed_tasks"] == 10 and l10["uncleared_tasks"] == 0 and l10["completion_pct"] == 100.0
+        assert len(rs10.json()["history"]) == 3
+
+        # AC-10: KPI actual achievement remains unchanged after task submissions
+        vijay_sheet_after = await client.get("/api/monthly-kpis?month=2026-11&user_id=u-vijay", headers=H(tok["vijay"]))
+        assert vijay_sheet_after.json()["overall_score"] == vijay_score_before
+        assert "DAILY_TASK_PROGRESS_SUBMITTED" in {l["action"] for l in db.audit_logs.docs}
 
     print("ALL_COMMAND_CENTER_AND_MONTHLY_KPI_TESTS_PASSED")
 

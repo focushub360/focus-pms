@@ -211,6 +211,7 @@ async def _build_default_sheet(target_user: dict, month: str, template_code: Opt
         "approver_name": approver["name"] if approver else None,
         "decision_comment": "",
         "kpis": kpis,
+        "weekly_notes": {"w1": "", "w2": "", "w3": "", "w4": "", "w5": ""},
         "history": [],
         "submitted_at": None,
         "decided_at": None,
@@ -439,6 +440,37 @@ async def update_monthly_actuals(
         new=new_vals,
     )
     return sheet
+
+
+class WeeklyNotesIn(BaseModel):
+    user_id: Optional[str] = None
+    month: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    notes: dict[str, str] = Field(default_factory=dict)
+
+
+@router.put("/monthly-kpis/weekly-notes")
+async def update_weekly_notes(payload: WeeklyNotesIn, user: dict = Depends(get_current_user)):
+    uid = payload.user_id or user["id"]
+    if uid != user["id"] and not user.get("is_super_admin"):
+        raise HTTPException(status_code=403, detail="Only the employee can update their own weekly progress notes")
+    sheet = await db.monthly_kpi_sheets.find_one({"user_id": uid, "month": payload.month}, {"_id": 0})
+    if not sheet:
+        target_user = await db.users.find_one({"id": uid}, {"_id": 0, "password_hash": 0})
+        if not target_user:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        sheet = await _build_default_sheet(target_user, payload.month)
+        await db.monthly_kpi_sheets.insert_one(dict(sheet))
+
+    if sheet.get("locked") or sheet.get("status") in ("SUBMITTED", "APPROVED"):
+        raise HTTPException(status_code=400, detail=f"Scorecard for {payload.month} is {sheet['status'].lower()} and locked")
+
+    clean = {wk: str(payload.notes.get(wk, "") or "") for wk in ("w1", "w2", "w3", "w4", "w5")}
+    await db.monthly_kpi_sheets.update_one(
+        {"id": sheet["id"]},
+        {"$set": {"weekly_notes": clean, "updated_at": now_iso()}},
+    )
+    await audit(user, "WEEKLY_PROGRESS_NOTES_UPDATED", "monthly_kpi_sheet", sheet["id"], {"user_id": uid, "month": payload.month})
+    return await db.monthly_kpi_sheets.find_one({"id": sheet["id"]}, {"_id": 0})
 
 
 # Backward-compatible weekly endpoint from earlier integration
