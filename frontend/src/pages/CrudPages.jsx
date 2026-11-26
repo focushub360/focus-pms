@@ -1,32 +1,59 @@
 import { makeCrudPage } from "./_crud";
 import ConvertLead from "@/components/ConvertLead";
+import { api, errMsg, fmtINR } from "@/lib/api";
+import { toast } from "sonner";
+
+const TEMP_CHIP = { Hot: "fe-chip-red", Warm: "fe-chip-orange", Cold: "fe-chip-cyan" };
 
 export const Leads = makeCrudPage({
-  title: "Leads", subtitle: "Prospective customers in your pipeline.", endpoint: "/leads", perm: "SALES_LEAD_MANAGE",
+  title: "Leads", subtitle: "Prospective customers in your pipeline (Hot / Warm / Cold).", endpoint: "/leads", perm: "SALES_LEAD_MANAGE",
   testid: "leads-page",
-  headers: ["Lead ID", "Name", "Company", "Status", "Source", "Owner", "Email", ""],
-  defaultForm: { name: "", company: "", email: "", phone: "", source: "Outbound", campaign_id: "", status: "New", owner_id: "", notes: "" },
+  headers: ["Lead ID", "Name", "Company", "Temp", "Status", "Est. Value", "Source", "Owner", ""],
+  defaultForm: { name: "", company: "", email: "", phone: "", source: "Outbound", campaign_id: "", status: "New", temperature: "Warm", estimated_value_inr: 0, owner_id: "", notes: "" },
   fields: [
     { key: "name", label: "Lead Name", required: true },
     { key: "company", label: "Company", required: true },
     { key: "email", label: "Email", type: "email" },
     { key: "phone", label: "Phone" },
+    { key: "temperature", label: "Temperature", type: "select", options: ["Hot", "Warm", "Cold"] },
+    { key: "estimated_value_inr", label: "Est. Deal Value (INR)", type: "number" },
     { key: "source", label: "Source", type: "select", options: ["Outbound", "Inbound", "Referral", "Campaign", "Event"] },
     { key: "status", label: "Status", type: "select", options: ["New", "Contacted", "Qualified", "Converted", "Disqualified"] },
     { key: "owner_id", label: "Owner", type: "users" },
     { key: "notes", label: "Notes", full: true },
   ],
-  rowRender: (r, users, reload) => (
-    <tr key={r.id} data-testid={`lead-${r.id}`}>
-      <td className="text-xs text-slate-500">{r.lead_code || "—"}</td>
-      <td className="font-semibold">{r.name}</td><td>{r.company}</td>
-      <td><span className="fe-chip fe-chip-blue">{r.status}</span></td>
-      <td>{r.source}</td>
-      <td>{users.find((u) => u.id === r.owner_id)?.name || "—"}</td>
-      <td className="text-xs">{r.email || "—"}</td>
-      <td><ConvertLead lead={r} onDone={reload} /></td>
-    </tr>
-  ),
+  rowRender: (r, users, reload) => {
+    const temp = r.temperature || "Warm";
+    const changeTemp = async (nextTemp) => {
+      try {
+        await api.patch(`/leads/${r.id}`, { temperature: nextTemp });
+        toast.success(`Lead marked ${nextTemp}`);
+        reload();
+      } catch (e) { toast.error(errMsg(e)); }
+    };
+    return (
+      <tr key={r.id} data-testid={`lead-${r.id}`}>
+        <td className="text-xs text-slate-500">{r.lead_code || "—"}</td>
+        <td className="font-semibold">{r.name}<div className="text-[11px] text-slate-400 font-normal">{r.email || "—"}</div></td>
+        <td>{r.company}</td>
+        <td>
+          <select
+            value={temp}
+            onChange={(e) => changeTemp(e.target.value)}
+            className={`fe-chip cursor-pointer focus:outline-none ${TEMP_CHIP[temp] || "fe-chip-orange"}`}
+            data-testid={`lead-temp-${r.id}`}
+          >
+            {["Hot", "Warm", "Cold"].map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </td>
+        <td><span className="fe-chip fe-chip-blue">{r.status}</span></td>
+        <td className="font-semibold">{fmtINR(r.estimated_value_inr || 0)}</td>
+        <td>{r.source}</td>
+        <td>{users.find((u) => u.id === r.owner_id)?.name || "—"}</td>
+        <td><ConvertLead lead={r} onDone={reload} /></td>
+      </tr>
+    );
+  },
 });
 
 export const Accounts = makeCrudPage({

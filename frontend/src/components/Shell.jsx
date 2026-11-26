@@ -19,7 +19,7 @@ const NAV = [
   { to: "/app/calendar", label: "Calendar & Activities", icon: CalendarDays, perms: null },
   { to: "/app/daily-activity", label: "Daily Activity", icon: ClipboardList, perms: null },
   { to: "/app/reports", label: "Reports & Analytics", icon: BarChart3, perms: null },
-  { to: "/app/targets", label: "Targets & KPIs", icon: Target, perms: ["TARGETS_VIEW", "TARGETS_CONFIGURE"] },
+  { to: "/app/targets", label: "Targets & KPIs", icon: Target, perms: ["TARGETS_VIEW", "TARGETS_CONFIGURE", "MANAGEMENT_BOARD_VIEW", "HOD_VIEW", "MIS_REPORT_VIEW"] },
   { to: "/app/users", label: "User & Access", icon: UserPlus, perms: ["USER_ONBOARDING_ADMIN", "USER_VIEW"] },
   { to: "/app/audit", label: "Audit Log", icon: ScrollText, perms: ["AUDIT_VIEW"] },
 ];

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, FY, hasPerm, hasAnyPerm, monthLabel } from "@/lib/api";
+import { Gauge } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Select } from "@/components/dash/ui";
 import MyPerformance from "@/components/dash/MyPerformance";
@@ -41,6 +43,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {hasAnyPerm(user, ["MANAGEMENT_BOARD_VIEW", "HOD_VIEW", "SYSTEM_ADMIN", "MIS_REPORT_VIEW"]) && (
+            <Link
+              to="/app/targets?tab=command-center"
+              data-testid="open-command-center-btn"
+              className="fe-btn-primary text-xs py-1.5 px-3"
+            >
+              <Gauge size={14} /> Command Center
+            </Link>
+          )}
           <Select value={fy} onChange={() => { }} testid="filter-fy" options={[{ value: FY, label: "FY 2026–27" }]} />
           <Select value={period} onChange={setPeriod} testid="filter-period" options={periodOpts} />
           {tab === "employee" && <Select value={empId} onChange={setEmpId} testid="filter-employee" options={employees.map((e) => ({ value: e.id, label: e.name }))} />}

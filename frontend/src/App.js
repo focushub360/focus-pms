@@ -18,6 +18,7 @@ import Reports from "@/pages/Reports";
 import { Leads, Accounts, Campaigns } from "@/pages/CrudPages";
 import AuditLog from "@/pages/AuditLog";
 import Profile from "@/pages/Profile";
+import Projects from "@/pages/Projects";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -35,7 +36,9 @@ function AppShellRoutes() {
     <Shell>
       <Routes>
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="command-center" element={<Navigate to="/app/targets?tab=command-center" replace />} />
         <Route path="opportunities" element={<Opportunities />} />
+        <Route path="projects" element={<Projects />} />
         <Route path="leads" element={<Leads />} />
         <Route path="accounts" element={<Accounts />} />
         <Route path="campaigns" element={<Campaigns />} />

@@ -8,7 +8,7 @@ const STAGES = ["New", "Contacted", "Qualified", "Meeting / Discovery", "Solutio
 
 const DEFAULT = {
   title: "", account_name: "", decision_maker: "", stage: "New", po_reference: "", won_lost_reason: "",
-  value_inr: 0, expected_close_date: "", primary_owner_id: "", contributors: [], notes: "",
+  value_inr: 0, invoiced_inr: 0, collected_inr: 0, expected_close_date: "", primary_owner_id: "", contributors: [], notes: "",
 };
 
 export default function Opportunities() {
@@ -56,6 +56,8 @@ export default function Opportunities() {
     const payload = {
       ...form,
       value_inr: Number(form.value_inr || 0),
+      invoiced_inr: Number(form.invoiced_inr || 0),
+      collected_inr: Number(form.collected_inr || 0),
       expected_close_date: form.expected_close_date || null,
       contributors: form.contributors.filter((c) => c.user_id).map((c) => ({ user_id: c.user_id, credit_pct: Number(c.credit_pct || 0) })),
     };
@@ -142,9 +144,11 @@ export default function Opportunities() {
                   <option value="">— Select —</option>
                   {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
+              </div>
               <div><label className="fe-kpi-label">PO / Agreement Ref.{form.stage === "Won" && " *"}</label><input required={form.stage === "Won"} value={form.po_reference || ""} onChange={(e) => setForm({ ...form, po_reference: e.target.value })} className="fe-input mt-1" data-testid="opp-po"/></div>
               <div><label className="fe-kpi-label">Won / Lost / On-hold reason{["Lost", "On Hold"].includes(form.stage) && " *"}</label><input required={["Lost", "On Hold"].includes(form.stage)} value={form.won_lost_reason || ""} onChange={(e) => setForm({ ...form, won_lost_reason: e.target.value })} className="fe-input mt-1" data-testid="opp-reason"/></div>
-              </div>
+              <div><label className="fe-kpi-label">Invoiced (INR)</label><input type="number" min="0" step="1000" value={form.invoiced_inr ?? 0} onChange={(e) => setForm({ ...form, invoiced_inr: e.target.value })} className="fe-input mt-1" data-testid="opp-invoiced"/></div>
+              <div><label className="fe-kpi-label">Collected (INR)</label><input type="number" min="0" step="1000" value={form.collected_inr ?? 0} onChange={(e) => setForm({ ...form, collected_inr: e.target.value })} className="fe-input mt-1" data-testid="opp-collected"/></div>
             </div>
 
             <div className="mt-6">

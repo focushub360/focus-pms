@@ -4,6 +4,8 @@
 @tailwind utilities;
 
 :root {
+  /* Single place to control global UI zoom across all pages (0.9 = 90% minimal view, 1 = 100% default) */
+  --ui-zoom: 0.9;
   --fe-deep-purple: #262262;
   --fe-corp-blue: #264494;
   --fe-cyan: #51C5DC;
@@ -17,6 +19,21 @@
   --ios-indigo: #5856D6;
   --ios-teal: #30B0C7;
   --ios-green: #34C759;
+}
+
+@supports (zoom: 0.9) {
+  html {
+    zoom: var(--ui-zoom);
+  }
+
+  /* Compensate 100vh utilities so full-screen layouts still occupy 100% of the display */
+  .min-h-screen {
+    min-height: calc(100vh / var(--ui-zoom));
+  }
+
+  .h-screen {
+    height: calc(100vh / var(--ui-zoom));
+  }
 }
 
 html, body, #root {
