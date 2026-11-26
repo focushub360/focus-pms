@@ -181,19 +181,14 @@ export default function ActionChecklist({
               />
             </div>
           </div>
-          <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
-              Target / Comment (optional)
-            </label>
-            <textarea
-              rows={2}
-              placeholder="Enter target, deliverables, or comments (text or numbers)..."
-              value={newTarget}
-              onChange={(e) => setNewTarget(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-[#007AFF] resize-y"
-              data-testid="checklist-new-target"
-            />
-          </div>
+          <textarea
+            rows={2}
+            placeholder="Comment box"
+            value={newTarget}
+            onChange={(e) => setNewTarget(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-[#007AFF] resize-y"
+            data-testid="checklist-new-target"
+          />
           <div className="flex items-end justify-between gap-2 text-xs">
             <div className="flex-1 max-w-[130px]">
               <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">Priority</label>
