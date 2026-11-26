@@ -86,11 +86,17 @@ class ThresholdIn(BaseModel):
     achieved: float = Field(gt=0)
     on_track: float = Field(gt=0)
     at_risk: float = Field(ge=0)
+    achievement_cap: float = Field(default=120, ge=100, le=300)
 
 
 async def get_thresholds() -> dict:
     t = await db.settings.find_one({"key": "kpi_thresholds"}, {"_id": 0}) or {}
-    return {"achieved": t.get("achieved", 100), "on_track": t.get("on_track", 80), "at_risk": t.get("at_risk", 60)}
+    return {
+        "achieved": t.get("achieved", 100),
+        "on_track": t.get("on_track", 80),
+        "at_risk": t.get("at_risk", 60),
+        "achievement_cap": t.get("achievement_cap", 120),
+    }
 
 
 @router.get("/settings/kpi-thresholds")

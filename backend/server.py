@@ -36,6 +36,8 @@ from daily_routes import router as daily_router
 from alerts_routes import router as alerts_router
 from import_routes import router as import_router
 from reports_routes import router as reports_router
+from command_center_routes import router as command_center_router
+from monthly_kpi_routes import router as monthly_kpi_router
 from storage import init_storage
 from phase2_routes import apply_core_defaults, init_approver_settings, router as phase2_router
 from metrics import STAGES
@@ -196,6 +198,8 @@ class OpportunityIn(BaseModel):
     decision_maker: str = ""
     stage: str = "New"
     value_inr: float = Field(default=0, ge=0)
+    invoiced_inr: float = Field(default=0, ge=0)
+    collected_inr: float = Field(default=0, ge=0)
     probability: float = Field(default=0, ge=0, le=100)
     service_category: str = ""
     po_reference: str = ""
@@ -210,6 +214,9 @@ class OpportunityIn(BaseModel):
     notes: str = ""
 
 
+LEAD_TEMPERATURES = ("Hot", "Warm", "Cold")
+
+
 class LeadIn(BaseModel):
     name: str
     company: str
@@ -218,8 +225,24 @@ class LeadIn(BaseModel):
     source: str = "Outbound"
     campaign_id: Optional[str] = None
     status: str = "New"
+    temperature: str = "Warm"  # Hot, Warm, Cold
+    estimated_value_inr: float = Field(default=0, ge=0)
     owner_id: str
     notes: str = ""
+
+
+class LeadUpdateIn(BaseModel):
+    name: Optional[str] = None
+    company: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    source: Optional[str] = None
+    campaign_id: Optional[str] = None
+    status: Optional[str] = None
+    temperature: Optional[str] = None
+    estimated_value_inr: Optional[float] = Field(default=None, ge=0)
+    owner_id: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class AccountIn(BaseModel):
@@ -736,6 +759,8 @@ async def list_leads(user: dict = Depends(require_permission("SALES_LEAD_MANAGE"
 
 @api.post("/leads")
 async def create_lead(payload: LeadIn, user: dict = Depends(require_permission("SALES_LEAD_MANAGE"))):
+    if payload.temperature not in LEAD_TEMPERATURES:
+        raise HTTPException(status_code=400, detail=f"Invalid temperature. Allowed: {', '.join(LEAD_TEMPERATURES)}")
     dup_q = [{"name": {"$regex": f"^{re.escape(payload.name.strip())}$", "$options": "i"}, "company": {"$regex": f"^{re.escape(payload.company.strip())}$", "$options": "i"}}]
     if payload.email:
         dup_q.append({"email": {"$regex": f"^{re.escape(payload.email.strip())}$", "$options": "i"}})
@@ -744,9 +769,29 @@ async def create_lead(payload: LeadIn, user: dict = Depends(require_permission("
     n = await db.leads.count_documents({}) + 1
     lead = {"id": str(uuid.uuid4()), "lead_code": f"LD-{n:05d}", **payload.model_dump(), "created_at": now_iso(), "updated_at": now_iso(), "created_by": user["id"]}
     await db.leads.insert_one(lead)
-    await audit(user, "LEAD_CREATED", "lead", lead["id"], {})
+    await audit(user, "LEAD_CREATED", "lead", lead["id"], {"temperature": payload.temperature})
     lead.pop("_id", None)
     return lead
+
+
+@api.patch("/leads/{lead_id}")
+async def update_lead(lead_id: str, payload: LeadUpdateIn, user: dict = Depends(require_permission("SALES_LEAD_MANAGE"))):
+    lead = await db.leads.find_one({"id": lead_id}, {"_id": 0})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if not user.get("is_super_admin") and user.get("data_visibility") == "OWN" and lead.get("owner_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorised for this lead")
+    updates = payload.model_dump(exclude_unset=True)
+    if "temperature" in updates and updates["temperature"] not in LEAD_TEMPERATURES:
+        raise HTTPException(status_code=400, detail=f"Invalid temperature. Allowed: {', '.join(LEAD_TEMPERATURES)}")
+    if not updates:
+        return lead
+    updates["updated_at"] = now_iso()
+    await db.leads.update_one({"id": lead_id}, {"$set": updates})
+    prev = {k: lead.get(k) for k in updates if k != "updated_at" and lead.get(k) != updates[k]}
+    if prev:
+        await audit(user, "LEAD_UPDATED", "lead", lead_id, {"fields": list(prev.keys())}, previous=prev, new={k: updates[k] for k in prev})
+    return await db.leads.find_one({"id": lead_id}, {"_id": 0})
 
 
 @api.get("/accounts")
@@ -834,6 +879,8 @@ app.include_router(daily_router)
 app.include_router(alerts_router)
 app.include_router(import_router)
 app.include_router(reports_router)
+app.include_router(command_center_router)
+app.include_router(monthly_kpi_router)
 
 
 @app.on_event("startup")

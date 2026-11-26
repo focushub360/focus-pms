@@ -249,6 +249,10 @@ async def notifications(user: dict = Depends(get_current_user)):
         n = await db.kpi_assignments.count_documents({"actual_status": "SUBMITTED", "user_id": {"$ne": user["id"]}})
         if n:
             items.append({"type": "VALIDATION", "title": f"{n} KPI actual(s) awaiting validation", "link": "/app/targets?tab=assignments"})
+    if has_permission(user, "HOD_VIEW") or has_permission(user, "TARGETS_APPROVE"):
+        n = await db.monthly_kpi_sheets.count_documents({"status": "SUBMITTED", "user_id": {"$ne": user["id"]}})
+        if n:
+            items.append({"type": "SCORECARD", "title": f"{n} monthly KPI scorecard(s) awaiting HOD review", "link": "/app/targets?tab=scorecard"})
     n = await db.activities.count_documents({"assigned_to": user["id"], "status": {"$nin": ["Completed", "Cancelled"]}, "end_at": {"$lt": now}})
     if n:
         items.append({"type": "OVERDUE", "title": f"{n} overdue activit{'y' if n == 1 else 'ies'}", "link": "/app/dashboard"})

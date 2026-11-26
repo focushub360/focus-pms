@@ -13,6 +13,7 @@ KPI_CATEGORIES = [
     ("FUNC_MARKETING", "Functional — Creative & Marketing (Satvinder)"),
     ("FUNC_BD", "Functional — Business Development (Kabir/Kriti/Mounika)"),
     ("FUNC_HOD", "Functional — Head of Department (Manoj)"),
+    ("PROJECT_DELIVERY", "Optional Project-Based KPIs"),
 ]
 
 # role_codes that all sales contributors share
@@ -123,6 +124,18 @@ KPI_DEFINITIONS = [
     ("HOD_FORECAST", "Sales Forecast Accuracy (Dept)", "FUNC_HOD", "%", "100 − |forecast − actual|/actual × 100", "QUARTERLY", ["HEAD_OF_DEPARTMENT"]),
     ("HOD_REVIEW_CLOSE", "Review Action Closure", "FUNC_HOD", "%", "Closed actions / open × 100", "MONTHLY", ["HEAD_OF_DEPARTMENT"]),
     ("HOD_LOST_REVIEW", "Lost Opportunity Review", "FUNC_HOD", "%", "Lost opps reviewed / lost × 100", "MONTHLY", ["HEAD_OF_DEPARTMENT"]),
+
+    # ── Additional Role & Optional Project-Based KPIs ──
+    ("EA_EXEC_PACK", "Executive Review Pack Readiness", "FUNC_MIS", "%", "Executive packs ready ahead of review / total × 100", "MONTHLY", ["MIS_BUSINESS_ANALYST"]),
+    ("MKT_SLA", "Brand & Collateral Turnaround SLA", "FUNC_MARKETING", "%", "Creatives delivered within SLA / requested × 100", "MONTHLY", ["MARKETING_MANAGER"]),
+    ("PRJ_HANDOVER", "Project Handover & Kickoff Quality", "PROJECT_DELIVERY", "%", "Complete project handovers / projects × 100", "MONTHLY", ALL_SALES),
+    ("PRJ_EXPANSION", "Key Account Project Expansion", "PROJECT_DELIVERY", "INR", "Follow-on orders from active projects", "MONTHLY", ALL_SALES),
+    ("PRJ_MILESTONE", "Project Milestone Adherence", "PROJECT_DELIVERY", "%", "On-time engineering milestones / total × 100", "MONTHLY", ALL_SALES),
+    ("PRJ_COMMISSIONING", "Commissioning Readiness & Sign-off", "PROJECT_DELIVERY", "%", "Projects commissioned on schedule / total × 100", "MONTHLY", ALL_SALES),
+    ("PRJ_COST_TRACK", "Project Costing & Margin Tracking", "PROJECT_DELIVERY", "%", "Projects with monthly margin reports / total × 100", "MONTHLY", ALL_SALES),
+    ("PRJ_RISK_LOG", "Project Governance & Risk Logs", "PROJECT_DELIVERY", "%", "Active projects with updated risk logs / total × 100", "MONTHLY", ALL_SALES),
+    ("PRJ_CASE_STUDY", "Project Case Study & Showcase Delivery", "PROJECT_DELIVERY", "count", "Published engineering case studies", "MONTHLY", ALL_SALES),
+    ("PRJ_EVENT_EXEC", "Trade Event / Showcase Execution", "PROJECT_DELIVERY", "%", "Planned event milestones completed / total × 100", "MONTHLY", ALL_SALES),
 ]
 
 FREQUENCIES = ["DAILY", "WEEKLY", "FORTNIGHTLY", "MONTHLY", "QUARTERLY", "HALF_YEARLY", "ANNUAL"]
@@ -161,3 +174,159 @@ CORE_KPI_PROFILES = [
     ("MARKETING_MANAGER", _SHARED + ["MKT_CAL_EXEC", "MKT_CAMP_LAUNCH", "MKT_CONTENT", "MKT_LEADS", "MKT_ATTR_VAL"]),
     ("SALES_MARKETING_CONTRIBUTOR", _SHARED + ["SP_MEETINGS", "SP_PROP_SUB", "SP_PIPE_VAL", "BD_NEW_ACC", "BD_PIPE_GROWTH"]),
 ]
+
+
+def _tpl_item(
+    code: str,
+    name: str,
+    measurement: str,
+    unit: str,
+    weight: float,
+    default_target: float,
+    frequency: str = "Monthly",
+    source: str = "Manual",
+    direction: str = "higher",
+    kpi_group: str = "Functional",
+    is_optional: bool = False,
+    is_active: bool = True,
+    data_source: str = "MANUAL",
+) -> dict:
+    return {
+        "kpi_code": code,
+        "kpi_name": name,
+        "measurement": measurement,
+        "unit": unit,
+        "weight": weight,
+        "default_target": default_target,
+        "frequency": frequency,
+        "source": source,
+        "direction": direction,
+        "kpi_group": kpi_group,
+        "is_optional": is_optional,
+        "is_project_kpi": is_optional,
+        "is_active": is_active,
+        "data_source": data_source,
+    }
+
+
+_SALES_REGULAR_ITEMS = [
+    _tpl_item("SP_NEW_LEADS", "Leads Generated", "Number of new leads generated", "count", 10, 20, "Weekly", "CRM Leads", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_QUAL_LEADS", "Qualified Leads", "Number of leads meeting qualification criteria", "count", 15, 12, "Weekly", "CRM Leads", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_MEETINGS", "Customer Meetings", "Customer meetings completed", "count", 15, 16, "Weekly", "Calendar & Activities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_PROP_SUB", "Proposals Submitted", "Number of proposals submitted", "count", 15, 6, "Weekly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_FU_COMP", "Follow-up Compliance", "Follow-ups completed against planned follow-ups", "%", 10, 95, "Weekly", "Calendar & Activities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_PROP_CONV", "Conversion to Sales", "Percentage of qualified opportunities converted", "%", 15, 30, "Monthly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_CONF_SALES", "Revenue Achievement", "Revenue achieved against assigned monthly target", "INR", 20, 1000000, "Monthly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+]
+
+_SALES_SHARED_FOR_FUNCTIONAL = [
+    _tpl_item("SP_NEW_LEADS", "Leads Generated", "Number of new leads generated", "count", 5, 10, "Weekly", "CRM Leads", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_QUAL_LEADS", "Qualified Leads", "Number of leads meeting qualification criteria", "count", 5, 6, "Weekly", "CRM Leads", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_MEETINGS", "Customer Meetings", "Customer meetings completed", "count", 5, 8, "Weekly", "Calendar & Activities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_PROP_SUB", "Proposals Submitted", "Number of proposals submitted", "count", 5, 3, "Weekly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_FU_COMP", "Follow-up Compliance", "Follow-ups completed against planned follow-ups", "%", 5, 95, "Weekly", "Calendar & Activities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_PROP_CONV", "Conversion to Sales", "Percentage of qualified opportunities converted", "%", 5, 25, "Monthly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+    _tpl_item("SP_CONF_SALES", "Revenue Achievement", "Revenue achieved against assigned monthly target", "INR", 10, 500000, "Monthly", "CRM Opportunities", "higher", "Sales & BD", False, True, "SYSTEM"),
+]
+
+
+MONTHLY_ROLE_TEMPLATES = {
+    "SALES": {
+        "code": "SALES",
+        "label": "Sales & Business Development",
+        "description": "Sales & Business Development KPIs (Manoj, Kriti, Mounika, Kabir) + optional project KPIs.",
+        "items": [
+            *_SALES_REGULAR_ITEMS,
+            _tpl_item("PRJ_HANDOVER", "Project Handover & Kickoff", "Complete project handovers / total", "%", 0, 95, "Project-based", "Project Tracker", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("PRJ_EXPANSION", "Key Account Project Expansion", "Follow-on orders from active projects", "INR", 0, 300000, "Project-based", "CRM Opportunities", "higher", "Optional", True, False, "MANUAL"),
+        ],
+    },
+    "OPERATIONS": {
+        "code": "OPERATIONS",
+        "label": "Operations (Kiran Kulkarni)",
+        "description": "Operations coordination, issue resolution, client management & optional project-based KPIs.",
+        "items": [
+            _tpl_item("OPS_PROJ_COORD", "Project Coordination", "Projects / activities coordinated and milestone follow-ups", "count", 25, 12, "Weekly", "Project & Activity Tracker", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("OPS_ISSUE_RES", "Issue Resolution", "Issues resolved within agreed timelines", "%", 20, 95, "Weekly", "Operations Log", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("OPS_CLIENT_MGMT", "Client & Stakeholder Management", "Client meetings, follow-ups and action closure", "count", 20, 15, "Weekly", "Calendar & Activities", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("OPS_REPORT_ACC", "Reporting & Data Accuracy", "Accuracy and timely submission of operational reports", "%", 20, 98, "Monthly", "Operations MIS", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("OPS_FOLLOWUP", "Operational Follow-up", "Pending actions followed up and closed", "%", 15, 95, "Weekly", "Daily Activity & Tasks", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("OPS_OPT_PROJ_DELIVERY", "Project Delivery", "Assigned project delivery milestones completed on schedule", "%", 0, 95, "Project-based", "Project Tracker", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("OPS_OPT_SOP", "SOP Development & Restructuring", "SOP modules authored or restructured", "count", 0, 2, "Project-based", "Operations Docs", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("OPS_OPT_PROC_IMP", "Process Improvement / Implementation", "Operational process improvements rolled out", "count", 0, 2, "Project-based", "Operations Docs", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("OPS_OPT_NEW_PROJ", "New Project Implementation", "New project rollouts completed per plan", "count", 0, 1, "Project-based", "Project Tracker", "higher", "Optional", True, False, "MANUAL"),
+        ],
+    },
+    "EA_BA": {
+        "code": "EA_BA",
+        "label": "EA & Business Analyst + Sales (Vijay Devadas)",
+        "description": "Primary EA/BA functional KPIs retained alongside Sales & Business Development KPIs + optional KPIs.",
+        "items": [
+            _tpl_item("EA_MGMT_COORD", "Management Coordination", "Management requests, meetings and activities coordinated", "%", 10, 95, "Weekly", "Calendar & EA Log", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("MIS_ACC", "MIS & Reporting Accuracy", "Accuracy and timely submission of MIS reports", "%", 10, 98, "Monthly", "MIS Reports", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("EA_BA_ANALYSIS", "Business Analysis", "Analysis assignments completed and accepted", "count", 10, 4, "Monthly", "MIS & Analytics", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("EA_DATA_MGMT", "Data Management", "Data updated, validated and maintained accurately", "%", 10, 98, "Weekly", "CRM & Master Data", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("EA_MKT_RESEARCH", "Market Research", "Research assignments completed and submitted", "count", 5, 2, "Monthly", "Research Briefs", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("EA_DOC_MGMT", "Documentation Management", "Documents prepared, updated and delivered", "count", 5, 6, "Monthly", "Document Repository", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("EA_ACTION_TRACK", "Action Item Tracking", "Management / project action items followed up and closed", "%", 10, 95, "Weekly", "Daily & Review Logs", "higher", "Functional", False, True, "MANUAL"),
+            *_SALES_SHARED_FOR_FUNCTIONAL,
+            _tpl_item("EA_OPT_PROJ_COORD", "Project Coordination Support", "Assigned project coordination deliverables completed", "%", 0, 95, "Project-based", "Project Tracker", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("EA_OPT_SOP_DOC", "SOP & Process Documentation", "SOP and process documents completed", "count", 0, 2, "Project-based", "Process Docs", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("EA_OPT_PROC_MAP", "Process Mapping", "End-to-end process maps delivered", "count", 0, 2, "Project-based", "Process Docs", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("EA_OPT_DATA_CLEAN", "Data Cleansing & Validation", "Records audited and cleansed against quality rules", "%", 0, 98, "Project-based", "CRM Audit", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("EA_OPT_AUTOMATION", "Automation / Reporting Improvement", "Reporting automation or workflow improvements shipped", "count", 0, 1, "Project-based", "MIS Automation", "higher", "Optional", True, False, "MANUAL"),
+        ],
+    },
+    "CREATIVE": {
+        "code": "CREATIVE",
+        "label": "Creative Head + Sales (Satvinder Kaur)",
+        "description": "Primary Creative Design KPIs retained alongside Sales & Business Development KPIs + optional KPIs.",
+        "items": [
+            _tpl_item("CR_TASK_DELIVERY", "Design Task Delivery", "Assigned design work delivered within agreed deadlines", "%", 10, 95, "Weekly", "Creative Tracker", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_QUALITY_APP", "Design Quality & First-round Approval", "Designs accepted during initial review", "%", 10, 90, "Monthly", "Design Reviews", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_BRAND_COMP", "Brand Guideline Compliance", "Designs following approved brand guidelines", "%", 10, 100, "Monthly", "Brand Audit", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_BRIEF_UNDER", "Creative Brief Understanding", "Designs aligned with approved creative briefs", "%", 5, 95, "Monthly", "Creative Briefs", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_TAT", "Design Turnaround Time", "Design requests completed within agreed timelines", "%", 10, 95, "Weekly", "Creative Tracker", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_REVISION", "Revision Management", "Revisions completed within agreed timelines", "%", 5, 95, "Weekly", "Creative Tracker", "higher", "Functional", False, True, "MANUAL"),
+            _tpl_item("CR_ASSET_MGMT", "Creative Asset Management", "Creative files and assets organised and maintained", "%", 10, 98, "Monthly", "Asset Library", "higher", "Functional", False, True, "MANUAL"),
+            *_SALES_SHARED_FOR_FUNCTIONAL,
+            _tpl_item("CR_OPT_SOCIAL", "Social Media & Digital Creatives", "Social/digital creative deliverables shipped", "count", 0, 12, "Project-based", "Marketing Calendar", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_PITCH", "Presentation & Pitch Deck Design", "Client pitch decks & presentations designed", "count", 0, 3, "Project-based", "Sales Enablement", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_VIDEO", "Video / Motion Graphics", "Video or motion graphic assets produced", "count", 0, 2, "Project-based", "Media Library", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_EVENT", "Event & Exhibition Branding", "Event/exhibition branding collateral delivered", "count", 0, 1, "Project-based", "Marketing Events", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_PRINT", "Print & Production Artwork", "Print-ready artwork delivered error-free", "count", 0, 4, "Project-based", "Print Production", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_WEB", "Website / Landing Page Visuals", "Web/landing page visual assets delivered", "count", 0, 2, "Project-based", "Web Assets", "higher", "Optional", True, False, "MANUAL"),
+            _tpl_item("CR_OPT_CAMPAIGN", "Campaign Creative Concept Development", "Campaign creative concepts developed & approved", "count", 0, 2, "Project-based", "Marketing Campaigns", "higher", "Optional", True, False, "MANUAL"),
+        ],
+    },
+}
+
+
+import re
+
+
+def template_code_for_user(user: dict) -> str:
+    email = (user.get("email") or "").lower()
+    name = (user.get("name") or "").lower()
+    if "kiran" in email or "kiran" in name:
+        return "OPERATIONS"
+    if "vijay" in email or "vijay" in name:
+        return "EA_BA"
+    if "satvinder" in email or "satvinder" in name:
+        return "CREATIVE"
+
+    roles = set(user.get("role_codes") or [])
+    if "OPERATIONS_COORDINATOR" in roles:
+        return "OPERATIONS"
+    if "MIS_BUSINESS_ANALYST" in roles:
+        return "EA_BA"
+    if "MARKETING_MANAGER" in roles:
+        return "CREATIVE"
+    fr = (user.get("functional_responsibility") or "").lower()
+    if "operation" in fr:
+        return "OPERATIONS"
+    if "mis" in fr or "analysis" in fr or "executive assistant" in fr or re.search(r"\bea\b", fr):
+        return "EA_BA"
+    if "creative" in fr or "marketing" in fr:
+        return "CREATIVE"
+    return "SALES"

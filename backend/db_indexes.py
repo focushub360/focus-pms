@@ -69,6 +69,20 @@ INDEX_SPECIFICATIONS = [
     ("kpi_actuals", [("user_id", 1), ("fy", 1), ("month", 1)], {"name": "idx_kpi_actuals_user_fy_month"}),
     ("monthly_scorecards", [("user_id", 1), ("fy", 1), ("month", 1)], {"unique": True, "name": "idx_monthly_scorecards_unique"}),
     ("monthly_scorecards", [("status", 1)], {"name": "idx_monthly_scorecards_status"}),
+    ("monthly_kpi_sheets", [("user_id", 1), ("month", 1)], {"unique": True, "name": "idx_monthly_kpi_sheets_user_month"}),
+    ("monthly_kpi_sheets", [("status", 1)], {"name": "idx_monthly_kpi_sheets_status"}),
+    ("monthly_kpi_sheets", [("approver_id", 1), ("status", 1)], {"name": "idx_monthly_kpi_sheets_approver_status"}),
+    ("weekly_kpi_updates", [("user_id", 1), ("month", 1), ("kpi_code", 1)], {"name": "idx_weekly_kpi_updates_user_month_kpi"}),
+    ("kpi_toggle_requests", [("status", 1), ("approver_id", 1)], {"name": "idx_kpi_toggle_requests_status_approver"}),
+
+    # Engineering Projects in Hand
+    ("projects", [("id", 1)], {"unique": True, "name": "idx_projects_id_unique"}),
+    ("projects", [("stage", 1)], {"name": "idx_projects_stage"}),
+    ("projects", [("project_manager_id", 1)], {"name": "idx_projects_pm"}),
+    ("projects", [("created_at", -1)], {"name": "idx_projects_created_at_desc"}),
+
+    # Notifications
+    ("notifications", [("user_id", 1), ("read", 1)], {"name": "idx_notifications_user_read"}),
 
     # Cron Runs
     ("cron_runs", [("run_id", 1)], {"unique": True, "name": "idx_cron_runs_run_id_unique"}),
