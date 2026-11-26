@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, errMsg, fmtVal, FY, hasAnyPerm } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Panel, Empty, Loading, Select, KpiCard } from "@/components/dash/ui";
+import { Empty, Loading, Panel } from "@/components/dash/ui";
 import ReasonDialog from "@/components/dash/ReasonDialog";
 import { toast } from "sonner";
 import {
@@ -25,17 +25,24 @@ const FY_MONTHS = Array.from({ length: 12 }, (_, i) => {
 const THIS_MONTH = new Date().toISOString().slice(0, 7);
 const SELECTABLE_MONTHS = FY_MONTHS.filter((m) => m <= THIS_MONTH);
 
+const SHEET_STATUS_LABEL = {
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  APPROVED: "Approved",
+  RETURNED: "Returned",
+};
+
 const SHEET_CHIP = {
-  DRAFT: "fe-chip-blue",
-  SUBMITTED: "fe-chip-orange",
-  APPROVED: "fe-chip-green",
-  RETURNED: "fe-chip-red",
+  DRAFT: "bg-slate-100 text-slate-700 border border-slate-200",
+  SUBMITTED: "bg-amber-50 text-amber-700 border border-amber-200",
+  APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  RETURNED: "bg-rose-50 text-rose-700 border border-rose-200",
 };
 
 const KPI_STATUS_CHIP = {
-  "On Track": "fe-chip-green",
-  Watch: "fe-chip-orange",
-  "At Risk": "fe-chip-red",
+  "On Track": "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  Watch: "bg-amber-50 text-amber-700 border border-amber-200",
+  "At Risk": "bg-rose-50 text-rose-700 border border-rose-200",
   Pending: "bg-slate-100 text-slate-600 border border-slate-200",
   Deactive: "bg-slate-100 text-slate-400 border border-slate-200",
 };
@@ -75,7 +82,7 @@ function computeRowLive(k, actualVal, targetVal, weightVal, th) {
   return { isActive, actual, target, weight, rawAch, cappedAch, capPct, weightedScore, status };
 }
 
-function WeeklyProgressModal({ sheet, kpi, canEdit, onClose, onLogged }) {
+function WeeklyProgressModal({ sheet, kpi, canEdit, onClose }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [weekLabel, setWeekLabel] = useState("Week 1");
@@ -118,7 +125,6 @@ function WeeklyProgressModal({ sheet, kpi, canEdit, onClose, onLogged }) {
       setProgressValue("");
       setRemarks("");
       loadLogs();
-      onLogged();
     } catch (err) {
       toast.error(errMsg(err));
     } finally {
@@ -137,7 +143,7 @@ function WeeklyProgressModal({ sheet, kpi, canEdit, onClose, onLogged }) {
           <div>
             <h3 className="text-base font-bold text-[#262262]">Weekly Progress · {kpi.kpi_name}</h3>
             <p className="text-[11px] text-slate-500">
-              {sheet.user_name} · {sheet.month} · Target: {fmtVal(kpi.target, kpi.unit)} (Weekly tracking does not alter monthly percentage rules)
+              {sheet.user_name} · {sheet.month} · Target: {fmtVal(kpi.target, kpi.unit)}
             </p>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
@@ -241,15 +247,15 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
   const [err, setErr] = useState("");
   const [validationErrors, setValidationErrors] = useState([]);
 
-  // Draft values for inline editing
+  // Inline drafts
   const [actualDraft, setActualDraft] = useState({});
-  const [remarksDraft, setRemarksDraft] = useState({});
   const [targetDraft, setTargetDraft] = useState({});
   const [weightDraft, setWeightDraft] = useState({});
+  const [weeklyNotes, setWeeklyNotes] = useState({ w1: "", w2: "", w3: "", w4: "", w5: "" });
 
   // Modals
-  const [askDialog, setAskDialog] = useState(null); // "return" | "reopen"
-  const [toggleAsk, setToggleAsk] = useState(null); // { kpi, desiredActive }
+  const [askDialog, setAskDialog] = useState(null);
+  const [toggleAsk, setToggleAsk] = useState(null);
   const [weeklyModalKpi, setWeeklyModalKpi] = useState(null);
 
   const loadMeta = useCallback(() => {
@@ -260,17 +266,22 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
   }, []);
 
   const hydrateDrafts = (s) => {
-    const ad = {}, rd = {}, td = {}, wg = {};
+    const ad = {}, td = {}, wg = {};
     for (const k of s.kpis || []) {
       ad[k.kpi_code] = k.actual ?? "";
-      rd[k.kpi_code] = k.remarks ?? "";
       td[k.kpi_code] = k.target ?? "";
       wg[k.kpi_code] = k.weight ?? "";
     }
     setActualDraft(ad);
-    setRemarksDraft(rd);
     setTargetDraft(td);
     setWeightDraft(wg);
+    setWeeklyNotes({
+      w1: s.weekly_notes?.w1 || "",
+      w2: s.weekly_notes?.w2 || "",
+      w3: s.weekly_notes?.w3 || "",
+      w4: s.weekly_notes?.w4 || "",
+      w5: s.weekly_notes?.w5 || "",
+    });
   };
 
   const loadSheet = useCallback(async () => {
@@ -302,19 +313,20 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
     (sheet.approver_id === user.id || hasAnyPerm(user, ["HOD_VIEW", "SYSTEM_ADMIN"]));
 
   const liveSummary = useMemo(() => {
-    if (!sheet) return { weightTotal: 0, remainingWeight: 100, weightedScore: 0, overallScore: 0, onTrack: 0, watch: 0, atRisk: 0, pending: 0 };
+    if (!sheet) return { weightTotal: 0, remainingWeight: 100, weightedScore: 0, overallScore: 0, activeCount: 0, completedCount: 0, onTrack: 0 };
     let weightTotal = 0;
     let weightedScore = 0;
-    let onTrack = 0, watch = 0, atRisk = 0, pending = 0;
+    let activeCount = 0;
+    let completedCount = 0;
+    let onTrack = 0;
     for (const k of sheet.kpis || []) {
       const p = computeRowLive(k, actualDraft[k.kpi_code], targetDraft[k.kpi_code], weightDraft[k.kpi_code], thresholds);
       if (p.isActive) {
+        activeCount += 1;
         weightTotal += p.weight;
         weightedScore += p.weightedScore || 0;
+        if (p.actual !== null) completedCount += 1;
         if (p.status === "On Track") onTrack += 1;
-        else if (p.status === "Watch") watch += 1;
-        else if (p.status === "At Risk") atRisk += 1;
-        else pending += 1;
       }
     }
     const wt = Math.round(weightTotal * 100) / 100;
@@ -325,14 +337,13 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
       remainingWeight: Math.round((100 - wt) * 100) / 100,
       weightedScore: Math.round(weightedScore * 100) / 100,
       overallScore,
+      activeCount,
+      completedCount,
       onTrack,
-      watch,
-      atRisk,
-      pending,
     };
   }, [sheet, actualDraft, targetDraft, weightDraft, thresholds]);
 
-  const saveMonthlyActuals = async () => {
+  const saveMonthlyActualsAndNotes = async () => {
     if (!sheet) return;
     setBusy(true);
     setValidationErrors([]);
@@ -344,13 +355,27 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
           return {
             kpi_code: k.kpi_code,
             actual: val === "" || val === null || val === undefined ? null : Number(val),
-            remarks: remarksDraft[k.kpi_code] ?? "",
           };
         });
-      const r = await api.put("/monthly-kpis/actuals", { user_id: uid, month, entries });
+      await api.put("/monthly-kpis/actuals", { user_id: uid, month, entries });
+      const r = await api.put("/monthly-kpis/weekly-notes", { user_id: uid, month, notes: weeklyNotes });
       setSheet(r.data);
       hydrateDrafts(r.data);
-      toast.success("Monthly KPI actuals saved");
+      toast.success("Monthly KPI actuals & weekly progress notes saved");
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveWeeklyNotesOnly = async () => {
+    if (!sheet) return;
+    setBusy(true);
+    try {
+      const r = await api.put("/monthly-kpis/weekly-notes", { user_id: uid, month, notes: weeklyNotes });
+      setSheet(r.data);
+      toast.success("Weekly progress notes saved");
     } catch (e) {
       toast.error(errMsg(e));
     } finally {
@@ -378,7 +403,7 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
       });
       setSheet(r.data);
       hydrateDrafts(r.data);
-      toast.success(nextTemplate ? "Role KPI template applied" : "KPI configuration updated");
+      toast.success(nextTemplate ? "Role KPI template updated" : "KPI configuration saved");
     } catch (e) {
       toast.error(errMsg(e));
     } finally {
@@ -393,7 +418,6 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
       await saveConfig([{ kpi_code: k.kpi_code, is_active: desired }]);
       return;
     }
-    // Employee requesting toggle on a regular KPI -> HOD approval request
     setToggleAsk({ kpi: k, desiredActive: desired });
   };
 
@@ -419,8 +443,8 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
   const decideToggleReq = async (reqId, approve) => {
     setBusy(true);
     try {
-      await api.post(`/monthly-kpis/toggle-requests/${reqId}/decide`, { approve, comment: approve ? "Approved by HOD" : "Declined" });
-      toast.success(approve ? "KPI toggle request approved" : "KPI toggle request rejected");
+      await api.post(`/monthly-kpis/toggle-requests/${reqId}/decide`, { approve, comment: approve ? "Approved" : "Declined" });
+      toast.success(approve ? "KPI toggle request approved" : "KPI toggle request declined");
       loadMeta();
       loadSheet();
     } catch (e) {
@@ -456,10 +480,10 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
             return {
               kpi_code: k.kpi_code,
               actual: val === "" || val === null || val === undefined ? null : Number(val),
-              remarks: remarksDraft[k.kpi_code] ?? "",
             };
           });
         await api.put("/monthly-kpis/actuals", { user_id: uid, month, entries });
+        await api.put("/monthly-kpis/weekly-notes", { user_id: uid, month, notes: weeklyNotes });
       }
       const r = await api.post("/monthly-kpis/submit", { month, comment: "" });
       setSheet(r.data);
@@ -470,7 +494,7 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
       const detail = e?.response?.data?.detail;
       if (detail && typeof detail === "object" && Array.isArray(detail.errors)) {
         setValidationErrors(detail.errors);
-        toast.error(detail.message || "Please fix the highlighted validation errors");
+        toast.error(detail.message || "Please fix highlighted fields before submitting");
       } else {
         toast.error(errMsg(e));
       }
@@ -502,13 +526,30 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
   };
 
   const pendingToggleReqs = toggleReqs.filter((r) => r.status === "PENDING");
-  const invalidFieldSet = useMemo(
-    () => new Set(validationErrors.map((e) => `${e.kpi_code}:${e.field}`)),
-    [validationErrors]
+  const invalidFieldSet = useMemo(() => new Set(validationErrors.map((e) => `${e.kpi_code}:${e.field}`)), [validationErrors]);
+
+  // Scorecard shows all regular KPIs + any optional KPIs that are currently active (or have historical values)
+  const scorecardRows = useMemo(() => {
+    if (!sheet) return [];
+    return (sheet.kpis || []).filter(
+      (k) => !k.is_optional || k.is_active || k.actual !== null || Number(k.weight || 0) > 0
+    );
+  }, [sheet]);
+
+  const optionalLibraryRows = useMemo(() => {
+    if (!sheet) return [];
+    return (sheet.kpis || []).filter((k) => k.is_optional);
+  }, [sheet]);
+
+  const weeksNotedCount = useMemo(
+    () => ["w1", "w2", "w3", "w4", "w5"].filter((w) => (weeklyNotes[w] || "").trim().length > 0).length,
+    [weeklyNotes]
   );
 
+  const canSubmitReady = isSelf && !isLocked && Math.abs(liveSummary.weightTotal - 100) < 0.01;
+
   return (
-    <div className="space-y-5" data-testid="monthly-kpi-workspace">
+    <div className="space-y-4" data-testid="monthly-kpi-workspace">
       {/* HOD Pending Approvals & Toggle Requests */}
       {(queue.length > 0 || (isHodOrAdmin && pendingToggleReqs.length > 0)) && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -558,149 +599,164 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
         </div>
       )}
 
-      {/* 6.1 Employee Selection & Metadata Header */}
-      <div className="ios-card p-4 flex flex-wrap items-end justify-between gap-3">
+      {/* ────────── TOP FILTER & ACTION BAR (Screenshot-matched) ────────── */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
-          {canViewOthers && employees.length > 1 ? (
-            <div>
-              <div className="fe-kpi-label mb-1">Employee Name</div>
-              <Select
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Employee</label>
+            {canViewOthers && employees.length > 1 ? (
+              <select
                 value={uid}
-                onChange={setUid}
-                testid="mkpi-employee-select"
-                options={employees.map((e) => ({ value: e.id, label: e.name }))}
-              />
-            </div>
-          ) : (
-            <div>
-              <div className="fe-kpi-label mb-1">Employee Name</div>
-              <div className="fe-input py-1.5 text-sm bg-slate-50 font-semibold text-slate-800">{sheet?.user_name || user.name}</div>
-            </div>
-          )}
-
-          <div>
-            <div className="fe-kpi-label mb-1">Designation / Role</div>
-            <div className="fe-input py-1.5 text-xs bg-slate-50 font-semibold text-[#262262] w-auto">
-              {sheet?.designation || "Team Member"}
-            </div>
+                onChange={(e) => setUid(e.target.value)}
+                data-testid="mkpi-employee-select"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 min-w-[170px] shadow-2xs focus:outline-none focus:border-[#007AFF]"
+              >
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 min-w-[170px]">
+                {sheet?.user_name || user.name}
+              </div>
+            )}
           </div>
 
           <div>
-            <div className="fe-kpi-label mb-1">Department</div>
-            <div className="fe-input py-1.5 text-xs bg-slate-50 font-medium text-slate-700 w-auto">
-              {sheet?.department || "Sales & Marketing"}
-            </div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Role</label>
+            {canConfigTargets && templates.length > 0 && sheet ? (
+              <select
+                value={sheet.template_code}
+                onChange={(e) => saveConfig(null, e.target.value)}
+                data-testid="mkpi-template-select"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 min-w-[180px] shadow-2xs focus:outline-none focus:border-[#007AFF]"
+              >
+                {templates.map((t) => (
+                  <option key={t.code} value={t.code}>{t.label}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 min-w-[170px]">
+                {sheet?.template_label || sheet?.designation || "Team Member"}
+              </div>
+            )}
           </div>
 
           <div>
-            <div className="fe-kpi-label mb-1">Scorecard Month</div>
-            <Select
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Scorecard Month</label>
+            <input
+              type="month"
               value={month}
-              onChange={setMonth}
-              testid="mkpi-month-select"
-              options={FY_MONTHS.map((m) => ({ value: m, label: m }))}
+              onChange={(e) => e.target.value && setMonth(e.target.value)}
+              data-testid="mkpi-month-select"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 shadow-2xs focus:outline-none focus:border-[#007AFF]"
             />
           </div>
-
-          <div>
-            <div className="fe-kpi-label mb-1">Reporting Year</div>
-            <div className="fe-input py-1.5 text-xs bg-slate-50 font-semibold text-slate-700 w-auto">
-              {sheet?.fy_code || FY}
-            </div>
-          </div>
-
-          {sheet && canConfigTargets && templates.length > 0 && (
-            <div>
-              <div className="fe-kpi-label mb-1">Role KPI Template</div>
-              <Select
-                value={sheet.template_code}
-                onChange={(tpl) => saveConfig(null, tpl)}
-                testid="mkpi-template-select"
-                options={templates.map((t) => ({ value: t.code, label: t.label }))}
-              />
-            </div>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {!isLocked && (
-            <button onClick={syncCrm} disabled={busy} className="fe-btn-secondary !py-1.5 !px-3 !text-xs" data-testid="mkpi-sync-crm">
+            <button
+              type="button"
+              onClick={syncCrm}
+              disabled={busy}
+              className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              data-testid="mkpi-sync-crm"
+            >
               <RefreshCw size={13} /> Sync CRM
             </button>
           )}
           {canEditActuals && (
-            <button onClick={saveMonthlyActuals} disabled={busy} className="fe-btn-secondary !py-1.5 !px-3 !text-xs" data-testid="mkpi-save-actuals">
-              <Save size={13} /> Save Monthly Actuals
+            <button
+              type="button"
+              onClick={saveMonthlyActualsAndNotes}
+              disabled={busy}
+              className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              data-testid="mkpi-save-actuals"
+            >
+              <Save size={13} /> Save progress
             </button>
           )}
           {isSelf && !isLocked && (
-            <button onClick={submitMonthly} disabled={busy} className="fe-btn-primary !py-1.5 !px-3.5 !text-xs" data-testid="mkpi-submit">
-              <Send size={13} /> Submit Monthly Scorecard
+            <button
+              type="button"
+              onClick={submitMonthly}
+              disabled={busy}
+              data-testid="mkpi-submit"
+              className={`rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                canSubmitReady
+                  ? "bg-[#264494] hover:bg-[#1E3678] text-white shadow-sm"
+                  : "bg-[#93B4F5] hover:bg-[#7CA3F2] text-white"
+              }`}
+            >
+              <Send size={13} /> Submit monthly scorecard
             </button>
           )}
           {canApproveSelected && sheet?.status === "SUBMITTED" && (
             <>
               <button
+                type="button"
                 onClick={() => decideSheet("approve", "Approved")}
                 disabled={busy}
-                className="fe-btn-primary !py-1.5 !px-3 !text-xs"
+                className="fe-btn-primary !py-2 !px-3.5 !text-xs"
                 data-testid="mkpi-approve"
               >
                 <ShieldCheck size={13} /> Approve &amp; Lock
               </button>
               <button
+                type="button"
                 onClick={() => setAskDialog("return")}
                 disabled={busy}
-                className="fe-btn-secondary !py-1.5 !px-3 !text-xs text-rose-600 border-rose-200"
+                className="bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                 data-testid="mkpi-return"
               >
-                <RotateCcw size={13} /> Return for Correction
+                <RotateCcw size={13} /> Return
               </button>
             </>
           )}
           {canApproveSelected && sheet?.status === "APPROVED" && (
-            <button onClick={() => setAskDialog("reopen")} disabled={busy} className="fe-btn-secondary !py-1.5 !px-3 !text-xs" data-testid="mkpi-reopen">
+            <button
+              type="button"
+              onClick={() => setAskDialog("reopen")}
+              disabled={busy}
+              className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5 cursor-pointer"
+              data-testid="mkpi-reopen"
+            >
               <RotateCcw size={13} /> Reopen
             </button>
           )}
         </div>
       </div>
 
-      {/* Lock / Returned / Validation Banners */}
+      {/* Status & Validation Alerts */}
       {sheet?.status === "APPROVED" && (
-        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3 text-sm text-emerald-900" data-testid="mkpi-locked-banner">
-          <Lock size={17} className="text-emerald-600 shrink-0" />
+        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 flex items-center gap-2.5 text-xs text-emerald-900" data-testid="mkpi-locked-banner">
+          <Lock size={15} className="text-emerald-600 shrink-0" />
           <div>
             <b>Approved &amp; Locked</b> by {sheet.decided_by_name || sheet.approver_name}
-            {sheet.decision_comment ? ` — “${sheet.decision_comment}”` : ""}. Historical records are preserved and locked from editing.
+            {sheet.decision_comment ? ` — “${sheet.decision_comment}”` : ""}. Historical records are retained and locked.
           </div>
         </div>
       )}
       {sheet?.status === "SUBMITTED" && (
-        <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-3 text-sm text-amber-900" data-testid="mkpi-submitted-banner">
-          <Clock size={17} className="text-amber-600 shrink-0" />
-          <div>
-            <b>Submitted for HOD Approval</b> to {sheet.approver_name}. Editing is locked while under review.
-          </div>
+        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 flex items-center gap-2.5 text-xs text-amber-900" data-testid="mkpi-submitted-banner">
+          <Clock size={15} className="text-amber-600 shrink-0" />
+          <div><b>Submitted for HOD Approval</b> to {sheet.approver_name}. Editing is locked while under review.</div>
         </div>
       )}
       {sheet?.status === "RETURNED" && sheet.decision_comment && (
-        <div className="rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 flex items-center gap-3 text-sm text-rose-900" data-testid="mkpi-returned-banner">
-          <AlertTriangle size={17} className="text-rose-600 shrink-0" />
-          <div>
-            <b>Returned for Correction</b> by {sheet.decided_by_name || "HOD"}: “{sheet.decision_comment}”
-          </div>
+        <div className="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 flex items-center gap-2.5 text-xs text-rose-900" data-testid="mkpi-returned-banner">
+          <AlertTriangle size={15} className="text-rose-600 shrink-0" />
+          <div><b>Returned for Correction</b> by {sheet.decided_by_name || "HOD"}: “{sheet.decision_comment}”</div>
         </div>
       )}
       {validationErrors.length > 0 && (
-        <div className="rounded-2xl bg-rose-50 border border-rose-300 px-4 py-3 text-xs text-rose-900 space-y-1" data-testid="mkpi-validation-errors">
+        <div className="rounded-xl bg-rose-50 border border-rose-300 px-4 py-2.5 text-xs text-rose-900 space-y-1" data-testid="mkpi-validation-errors">
           <div className="font-bold flex items-center gap-1.5 text-rose-700">
-            <AlertTriangle size={14} /> Submission blocked — please correct the following fields:
+            <AlertTriangle size={14} /> Please fix the following before submitting:
           </div>
           <ul className="list-disc pl-5 space-y-0.5">
-            {validationErrors.map((ve, i) => (
-              <li key={i}>{ve.message}</li>
-            ))}
+            {validationErrors.map((ve, i) => <li key={i}>{ve.message}</li>)}
           </ul>
         </div>
       )}
@@ -710,83 +766,92 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
 
       {!loading && sheet && (
         <>
-          {/* 6.3 Exact 4 Summary Cards */}
+          {/* ────────── 4 CLEAN SUMMARY CARDS (Screenshot-matched) ────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5" data-testid="mkpi-summary-cards">
-            <KpiCard
-              label="Monthly Weighted Score"
-              value={`${liveSummary.overallScore}%`}
-              sub={`${liveSummary.weightedScore} pts · Max cap ${thresholds.achievement_cap ?? 120}%`}
-              accent="#264494"
-              testid="mkpi-overall-score"
-            />
-            <KpiCard
-              label="Total Active KPI Weight"
-              value={`${liveSummary.weightTotal}%`}
-              sub={
-                Math.abs(liveSummary.weightTotal - 100) < 0.01
-                  ? "Valid allocation (100%)"
-                  : liveSummary.remainingWeight > 0
-                  ? `${liveSummary.remainingWeight}% remaining to allocate`
-                  : `${Math.abs(liveSummary.remainingWeight)}% excess weight`
-              }
-              accent={Math.abs(liveSummary.weightTotal - 100) < 0.01 ? "#10B981" : "#EF4444"}
-              testid="mkpi-weight-total"
-            />
-            <KpiCard
-              label="KPIs On Track"
-              value={`${liveSummary.onTrack} / ${liveSummary.onTrack + liveSummary.watch + liveSummary.atRisk + liveSummary.pending}`}
-              sub={`Watch: ${liveSummary.watch} · At Risk: ${liveSummary.atRisk} · Pending: ${liveSummary.pending}`}
-              accent="#10B981"
-              testid="mkpi-on-track-card"
-            />
-            <div className="fe-kpi-card" data-testid="mkpi-submission-card">
-              <span className="absolute top-0 left-0 right-0 h-[4px] rounded-t-2xl" style={{ background: "linear-gradient(90deg, #5856D6, #007AFF)" }} />
-              <div className="fe-kpi-label">Monthly Submission Status</div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`fe-chip text-xs px-3 py-1 ${SHEET_CHIP[sheet.status] || "fe-chip-blue"}`} data-testid="mkpi-status-badge">
-                  {isLocked && <Lock size={11} className="mr-1" />}
-                  {sheet.status}
-                </span>
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs" data-testid="mkpi-overall-score">
+              <div className="text-xs font-medium text-slate-500">Monthly weighted score</div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1">{liveSummary.overallScore.toFixed(1)}%</div>
+              <div className="text-[11px] text-slate-400 mt-1">Based on active KPI weights and achievement</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs" data-testid="mkpi-weight-total">
+              <div className="text-xs font-medium text-slate-500">Weight allocation</div>
+              <div className={`text-2xl font-extrabold mt-1 ${Math.abs(liveSummary.weightTotal - 100) < 0.01 ? "text-slate-900" : "text-rose-600"}`}>
+                {liveSummary.weightTotal.toFixed(1)}%
               </div>
-              <div className="fe-kpi-sub">Approver: {sheet.approver_name || "HOD"}</div>
+              <div className="text-[11px] text-slate-400 mt-1">
+                {Math.abs(liveSummary.weightTotal - 100) < 0.01
+                  ? "Active KPI weights must total 100%"
+                  : liveSummary.remainingWeight > 0
+                  ? `${liveSummary.remainingWeight}% remaining to reach 100%`
+                  : `${Math.abs(liveSummary.remainingWeight)}% excess over 100%`}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs" data-testid="mkpi-on-track-card">
+              <div className="text-xs font-medium text-slate-500">KPIs on track</div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1">
+                {liveSummary.onTrack} / {liveSummary.activeCount}
+              </div>
+              <div className="text-[11px] text-slate-400 mt-1">Achievement at or above target</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs" data-testid="mkpi-submission-card">
+              <div className="text-xs font-medium text-slate-500">Submission status</div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1" data-testid="mkpi-status-badge">
+                {SHEET_STATUS_LABEL[sheet.status] || sheet.status}
+              </div>
+              <div className="text-[11px] text-slate-400 mt-1">
+                {isLocked ? `Approver: ${sheet.approver_name || "HOD"}` : "Complete active KPI targets and actuals; allocate 100% weight"}
+              </div>
             </div>
           </div>
 
-          {/* 6.2 Exact Scorecard Table (KPI, FREQ., SOURCE, TARGET, ACTUAL, ACH. %, WEIGHT, SCORE, STATUS, ACTIVE / DEACTIVE) */}
-          <Panel
-            title={`${sheet.user_name} · ${month} KPI Scorecard (${sheet.template_label})`}
-            right={
-              <div className="flex items-center gap-2">
+          {/* ────────── MONTHLY KPI SCORECARD TABLE (Screenshot-matched) ────────── */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden" data-testid="mkpi-table-panel">
+            <div className="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Monthly KPI scorecard</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Enter monthly target, final actual and weight. Update progress weekly; submit once at month-end.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-400 hidden lg:inline">
+                  Use the Active / Deactive control to decide which KPIs are included in the monthly score
+                </span>
                 {canConfigTargets && (
-                  <button onClick={() => saveConfig()} disabled={busy} className="fe-btn-secondary !py-1.5 !px-3 !text-xs" data-testid="mkpi-save-config">
+                  <button
+                    type="button"
+                    onClick={() => saveConfig()}
+                    disabled={busy}
+                    className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 cursor-pointer"
+                    data-testid="mkpi-save-config"
+                  >
                     Save Targets &amp; Weights
                   </button>
                 )}
-                <span className="text-[11px] text-slate-500 hidden md:inline">
-                  On Track ≥ {thresholds.achieved}% · Watch ≥ {thresholds.on_track}% · Cap {thresholds.achievement_cap ?? 120}%
-                </span>
               </div>
-            }
-            testid="mkpi-table-panel"
-          >
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="fe-table" data-testid="mkpi-table">
+              <table className="w-full text-left border-collapse min-w-[900px]" data-testid="mkpi-table">
                 <thead>
-                  <tr>
-                    <th>KPI</th>
-                    <th>Freq.</th>
-                    <th>Source</th>
-                    <th className="text-right">Target</th>
-                    <th className="text-right">Actual</th>
-                    <th className="text-right">Ach. %</th>
-                    <th className="text-right">Weight</th>
-                    <th className="text-right">Score</th>
-                    <th>Status</th>
-                    <th className="text-center">Active / Deactive</th>
+                  <tr className="bg-slate-50/70 border-b border-slate-200/70 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <th className="py-3 px-4">KPI</th>
+                    <th className="py-3 px-3">Freq.</th>
+                    <th className="py-3 px-3">Source</th>
+                    <th className="py-3 px-3">Target</th>
+                    <th className="py-3 px-3">Actual</th>
+                    <th className="py-3 px-3">Ach. %</th>
+                    <th className="py-3 px-3">Weight</th>
+                    <th className="py-3 px-3">Score</th>
+                    <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-4 text-right">Active / Deactive</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {(sheet.kpis || []).map((k) => {
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {scorecardRows.map((k) => {
                     const p = computeRowLive(k, actualDraft[k.kpi_code], targetDraft[k.kpi_code], weightDraft[k.kpi_code], thresholds);
                     const isCapped = p.rawAch !== null && p.rawAch > p.capPct;
                     const badTarget = invalidFieldSet.has(`${k.kpi_code}:target`);
@@ -795,81 +860,86 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
                     return (
                       <tr
                         key={k.kpi_code}
-                        className={!k.is_active ? "opacity-60 bg-slate-50/80" : ""}
+                        className={!k.is_active ? "bg-slate-50/70 opacity-60" : "hover:bg-slate-50/40"}
                         data-testid={`mkpi-row-${k.kpi_code}`}
                       >
-                        <td className="min-w-[230px]">
-                          <div className="font-semibold text-slate-800">{k.kpi_name}</div>
-                          {k.measurement && <div className="text-[11px] text-slate-400">{k.measurement}</div>}
-                          <div className="flex flex-wrap items-center gap-1 mt-1">
-                            <span className={`fe-chip ${k.is_optional ? "fe-chip-orange" : "fe-chip-blue"}`}>
-                              {k.is_optional ? "Optional" : "Regular"}
-                            </span>
-                            <span className={`fe-chip ${k.kpi_group === "Sales & BD" ? "fe-chip-purple" : "fe-chip-cyan"}`}>
-                              {k.kpi_group || "Functional"}
-                            </span>
+                        <td className="py-3 px-4">
+                          <div className="font-bold text-slate-900">{k.kpi_name}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {k.kpi_group === "Sales & BD" && (
+                              <span className="text-[10px] font-semibold text-indigo-600">Sales &amp; BD</span>
+                            )}
+                            {k.is_optional && (
+                              <span className="text-[10px] font-semibold text-amber-600">Optional</span>
+                            )}
                             {k.is_active && (
                               <button
                                 type="button"
                                 onClick={() => setWeeklyModalKpi(k)}
-                                className="inline-flex items-center gap-1 text-[10px] font-bold text-[#264494] hover:underline ml-1"
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#264494] hover:underline cursor-pointer"
                                 data-testid={`mkpi-weekly-btn-${k.kpi_code}`}
                               >
-                                <CalendarPlus size={11} /> Weekly Progress
+                                <CalendarPlus size={11} /> Weekly log
                               </button>
                             )}
                           </div>
                         </td>
 
-                        <td className="text-xs whitespace-nowrap">{k.frequency}</td>
-                        <td className="text-xs whitespace-nowrap text-slate-600">{k.source || k.data_source}</td>
+                        <td className="py-3 px-3 text-slate-600 whitespace-nowrap">{k.frequency}</td>
+                        <td className="py-3 px-3 text-slate-600 max-w-[170px]">{k.source || k.data_source}</td>
 
-                        <td className="text-right">
+                        <td className="py-3 px-3">
                           {canConfigTargets && k.is_active ? (
                             <input
                               type="number"
                               min="0"
                               step="any"
+                              placeholder="Target"
                               value={targetDraft[k.kpi_code] ?? ""}
                               onChange={(e) => setTargetDraft({ ...targetDraft, [k.kpi_code]: e.target.value })}
-                              className={`fe-input !py-1 !px-2 w-24 text-right text-xs ${badTarget ? "!border-rose-500 !ring-2 !ring-rose-200" : ""}`}
+                              className={`w-24 px-2.5 py-1.5 rounded-lg border bg-white text-xs text-slate-800 outline-none focus:border-[#007AFF] ${
+                                badTarget ? "border-rose-500 ring-2 ring-rose-100" : "border-slate-200"
+                              }`}
                               data-testid={`mkpi-target-${k.kpi_code}`}
                             />
                           ) : (
-                            <span className="text-xs font-medium">{fmtVal(p.target, k.unit)}</span>
-                          )}
-                        </td>
-
-                        <td className="text-right">
-                          {canEditActuals && k.is_active ? (
-                            <div className="flex flex-col items-end gap-1">
-                              <input
-                                type="number"
-                                min="0"
-                                step="any"
-                                value={actualDraft[k.kpi_code] ?? ""}
-                                placeholder="Enter actual"
-                                onChange={(e) => setActualDraft({ ...actualDraft, [k.kpi_code]: e.target.value })}
-                                className={`fe-input !py-1 !px-2 w-24 text-right text-xs ${badActual ? "!border-rose-500 !ring-2 !ring-rose-200" : ""}`}
-                                data-testid={`mkpi-actual-${k.kpi_code}`}
-                              />
-                              <span className="text-[10px] text-slate-400">{k.unit}</span>
+                            <div className="w-24 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 text-xs text-slate-700">
+                              {p.target !== null ? fmtVal(p.target, k.unit) : "Target"}
                             </div>
-                          ) : (
-                            <span className="text-xs font-semibold">{fmtVal(p.actual, k.unit)}</span>
                           )}
                         </td>
 
-                        <td className="text-right whitespace-nowrap text-xs">
+                        <td className="py-3 px-3">
+                          {canEditActuals && k.is_active ? (
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              placeholder="Actual"
+                              value={actualDraft[k.kpi_code] ?? ""}
+                              onChange={(e) => setActualDraft({ ...actualDraft, [k.kpi_code]: e.target.value })}
+                              className={`w-24 px-2.5 py-1.5 rounded-lg border bg-white text-xs text-slate-800 outline-none focus:border-[#007AFF] ${
+                                badActual ? "border-rose-500 ring-2 ring-rose-100" : "border-slate-200"
+                              }`}
+                              data-testid={`mkpi-actual-${k.kpi_code}`}
+                            />
+                          ) : (
+                            <div className="w-24 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 text-xs text-slate-700">
+                              {p.actual !== null ? fmtVal(p.actual, k.unit) : "Actual"}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-3 whitespace-nowrap text-slate-700">
                           {!k.is_active || p.rawAch === null ? "—" : (
                             <div>
                               <span className="font-semibold">{p.rawAch}%</span>
-                              {isCapped && <div className="text-[10px] font-bold text-amber-600">capped {p.capPct}%</div>}
+                              {isCapped && <div className="text-[10px] font-semibold text-amber-600">cap {p.capPct}%</div>}
                             </div>
                           )}
                         </td>
 
-                        <td className="text-right">
+                        <td className="py-3 px-3">
                           {canConfigTargets && k.is_active ? (
                             <input
                               type="number"
@@ -878,51 +948,44 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
                               step="0.5"
                               value={weightDraft[k.kpi_code] ?? ""}
                               onChange={(e) => setWeightDraft({ ...weightDraft, [k.kpi_code]: e.target.value })}
-                              className="fe-input !py-1 !px-2 w-16 text-right text-xs"
+                              className="w-16 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-[#007AFF]"
                               data-testid={`mkpi-weight-${k.kpi_code}`}
                             />
                           ) : (
-                            <span className="text-xs font-semibold">{p.weight}%</span>
+                            <div className="w-16 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 text-xs text-slate-700">
+                              {p.weight}
+                            </div>
                           )}
                         </td>
 
-                        <td className="text-right whitespace-nowrap text-xs">
-                          {!k.is_active || p.weightedScore === null ? (
-                            <span className="text-slate-400">—</span>
-                          ) : (
-                            <span className="font-bold text-[#262262]">{p.weightedScore}</span>
-                          )}
+                        <td className="py-3 px-3 whitespace-nowrap font-semibold text-slate-800">
+                          {!k.is_active || p.weightedScore === null || p.rawAch === null ? "—" : p.weightedScore}
                         </td>
 
-                        <td>
-                          <span className={`fe-chip ${KPI_STATUS_CHIP[p.status] || "fe-chip-blue"}`} data-testid={`mkpi-row-status-${k.kpi_code}`}>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                              KPI_STATUS_CHIP[p.status] || KPI_STATUS_CHIP.Pending
+                            }`}
+                            data-testid={`mkpi-row-status-${k.kpi_code}`}
+                          >
                             {p.status}
                           </span>
                         </td>
 
-                        {/* Final column AFTER Status: Active / Deactive toggle */}
-                        <td className="text-center">
+                        <td className="py-3 px-4 text-right">
                           <button
                             type="button"
                             disabled={isLocked || busy}
                             onClick={() => handleToggleActive(k)}
                             data-testid={`mkpi-toggle-${k.kpi_code}`}
-                            title={
-                              isLocked
-                                ? "Scorecard locked"
-                                : k.is_active
-                                ? "Click to deactivate (excluded from calculations, history retained)"
-                                : "Click to activate KPI"
-                            }
-                            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-                              k.is_active ? "bg-[#264494]" : "bg-slate-300"
+                            className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                              k.is_active
+                                ? "bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                                : "bg-blue-50 hover:bg-blue-100 border-blue-200 text-[#264494]"
                             }`}
                           >
-                            <span
-                              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                                k.is_active ? "translate-x-4" : "translate-x-1"
-                              }`}
-                            />
+                            {k.is_active ? "Deactivate" : "Activate"}
                           </button>
                         </td>
                       </tr>
@@ -931,21 +994,198 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
                 </tbody>
               </table>
             </div>
-          </Panel>
+          </div>
 
-          {/* 12. Audit Trail */}
+          {/* ────────── OPTIONAL KPI LIBRARY (Screenshot 2) ────────── */}
+          {optionalLibraryRows.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4" data-testid="optional-kpi-library">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Optional KPI library</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Optional KPIs can be activated or deactivated using the control in the scorecard. Once activated, enter a target, actual and weight; only active KPIs are included in scoring.
+                  </p>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold">
+                  Inactive by default
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {optionalLibraryRows.map((k) => (
+                  <div
+                    key={k.kpi_code}
+                    className="rounded-xl border border-slate-200/90 px-4 py-3 flex items-center justify-between gap-3 bg-white hover:border-slate-300 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 truncate">{k.kpi_name}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Source: {k.source || "Project tracker"} · {k.frequency}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          k.is_active
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {k.is_active ? "Active" : "Inactive"}
+                      </span>
+                      {!isLocked && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => handleToggleActive(k)}
+                          data-testid={`opt-toggle-${k.kpi_code}`}
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[11px] font-semibold text-slate-700 cursor-pointer"
+                        >
+                          {k.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl bg-blue-50/70 border border-blue-100 px-4 py-2.5 text-xs text-blue-700">
+                Keep optional KPIs inactive until the work is relevant. Deactivated KPIs remain visible in the scorecard but are excluded from monthly scoring.
+              </div>
+            </div>
+          )}
+
+          {/* ────────── WEEKLY PROGRESS NOTES (Week 1–5, Screenshot 2) ────────── */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4" data-testid="weekly-progress-notes">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Weekly progress notes</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Record key progress, blockers or evidence. These notes do not create separate weekly scorecards.
+                </p>
+              </div>
+              {canEditActuals && (
+                <button
+                  type="button"
+                  onClick={saveWeeklyNotesOnly}
+                  disabled={busy}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 cursor-pointer"
+                  data-testid="save-weekly-notes-btn"
+                >
+                  Save notes
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {[1, 2, 3, 4, 5].map((num) => {
+                const wk = `w${num}`;
+                return (
+                  <div key={wk} className="rounded-xl border border-slate-200/90 p-3 bg-white space-y-1.5">
+                    <div className="text-xs font-bold text-slate-900">Week {num}</div>
+                    <div className="text-[11px] text-slate-400">Progress / blockers / evidence</div>
+                    <input
+                      type="text"
+                      disabled={!canEditActuals}
+                      placeholder="Enter weekly update"
+                      value={weeklyNotes[wk] || ""}
+                      onChange={(e) => setWeeklyNotes({ ...weeklyNotes, [wk]: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-800 bg-white focus:outline-none focus:border-[#007AFF] disabled:bg-slate-50"
+                      data-testid={`weekly-note-${wk}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ────────── BOTTOM 2-COLUMN SUMMARY & APPROVAL WORKFLOW (Screenshot 2) ────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+              <h3 className="text-sm font-bold text-slate-900">Monthly performance summary</h3>
+              <p className="text-xs text-slate-400 mt-0.5 mb-3">Calculated from active KPI rows</p>
+              <div className="divide-y divide-slate-100 text-xs">
+                <div className="py-2.5 flex items-center justify-between">
+                  <span className="text-slate-600">Active KPIs</span>
+                  <span className="font-bold text-slate-900">{liveSummary.activeCount}</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <span className="text-slate-600">KPIs completed</span>
+                  <span className="font-bold text-slate-900">{liveSummary.completedCount} / {liveSummary.activeCount}</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <span className="text-slate-600">KPIs on track</span>
+                  <span className="font-bold text-slate-900">{liveSummary.onTrack} / {liveSummary.activeCount}</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <span className="text-slate-600">Total weight</span>
+                  <span className="font-bold text-slate-900">{liveSummary.weightTotal.toFixed(1)}%</span>
+                </div>
+                <div className="pt-3 flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-600">Weighted score</span>
+                  <span className="text-xl font-extrabold text-[#262262]">{liveSummary.overallScore.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 mb-3">Approval workflow</h3>
+                <div className="divide-y divide-slate-100 text-xs">
+                  <div className="py-2.5 flex items-center justify-between">
+                    <span className="text-slate-600">1. Weekly employee updates</span>
+                    <span className="font-bold text-slate-900">
+                      {weeksNotedCount > 0 ? `${weeksNotedCount} / 5 weeks noted` : "Manual"}
+                    </span>
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between">
+                    <span className="text-slate-600">2. Monthly employee submission</span>
+                    <span className="font-bold text-slate-900">
+                      {sheet.status === "DRAFT" ? "Pending" : SHEET_STATUS_LABEL[sheet.status]}
+                    </span>
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between">
+                    <span className="text-slate-600">3. HOD review</span>
+                    <span className="font-bold text-slate-900">
+                      {sheet.status === "DRAFT"
+                        ? "Awaiting submission"
+                        : sheet.status === "SUBMITTED"
+                        ? `Pending (${sheet.approver_name || "HOD"})`
+                        : `Reviewed (${sheet.decided_by_name || sheet.approver_name || "HOD"})`}
+                    </span>
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between">
+                    <span className="text-slate-600">4. HOD decision</span>
+                    <span className="font-bold text-slate-900">
+                      {sheet.status === "APPROVED"
+                        ? "Approved & Locked"
+                        : sheet.status === "RETURNED"
+                        ? "Returned for correction"
+                        : "Approve / Return"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-blue-50/70 border border-blue-100 px-3.5 py-2.5 text-[11px] text-blue-800 leading-relaxed">
+                Persisted to TaskBoard database with HOD approval, return comments, role permissions, scorecard locking (at {thresholds.achievement_cap ?? 120}% cap) and audit history.
+              </div>
+            </div>
+          </div>
+
+          {/* Audit Trail */}
           {(sheet.history || []).length > 0 && (
             <Panel title="Monthly Scorecard Audit Trail" testid="mkpi-history">
-              <ul className="divide-y divide-slate-100 text-sm">
+              <ul className="divide-y divide-slate-100 text-xs">
                 {[...(sheet.history || [])].reverse().map((h, idx) => (
                   <li key={idx} className="py-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#264494]" />
-                      <span className={`fe-chip ${SHEET_CHIP[h.action] || "fe-chip-blue"}`}>{h.action}</span>
-                      <span className="font-medium text-slate-800">{h.by_name}</span>
-                      {h.comment && <span className="text-slate-500 text-xs">“{h.comment}”</span>}
+                      <CheckCircle2 size={13} className="text-[#264494]" />
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${SHEET_CHIP[h.action] || "bg-slate-100 text-slate-700"}`}>{h.action}</span>
+                      <span className="font-semibold text-slate-800">{h.by_name}</span>
+                      {h.comment && <span className="text-slate-500">“{h.comment}”</span>}
                     </div>
-                    <span className="text-xs text-slate-400">{new Date(h.at).toLocaleString("en-IN")}</span>
+                    <span className="text-slate-400">{new Date(h.at).toLocaleString("en-IN")}</span>
                   </li>
                 ))}
               </ul>
@@ -960,7 +1200,6 @@ export default function MonthlyScorecardWorkspace({ employees = [] }) {
           kpi={weeklyModalKpi}
           canEdit={canEditActuals}
           onClose={() => setWeeklyModalKpi(null)}
-          onLogged={() => {}}
         />
       )}
 

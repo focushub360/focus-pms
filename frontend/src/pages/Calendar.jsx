@@ -47,6 +47,9 @@ export default function CalendarPage() {
   // Data states
   const [backendEvents, setBackendEvents] = useState([]);
   const [customTasks, setCustomTasks] = useState([]);
+  const [submissionData, setSubmissionData] = useState({ latest: null, history: [] });
+  const [submittingTasks, setSubmittingTasks] = useState(false);
+  const [submitTaskError, setSubmitTaskError] = useState("");
   const [meta, setMeta] = useState(null);
   const [dlg, setDlg] = useState(null);
 
@@ -80,6 +83,18 @@ export default function CalendarPage() {
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  const loadSubmissions = useCallback(() => {
+    api
+      .get("/calendar/tasks/submissions", { params: { date: selectedDate } })
+      .then((r) => setSubmissionData({ latest: r.data?.latest || null, history: r.data?.history || [] }))
+      .catch(() => setSubmissionData({ latest: null, history: [] }));
+  }, [selectedDate]);
+
+  useEffect(() => {
+    setSubmitTaskError("");
+    loadSubmissions();
+  }, [loadSubmissions]);
 
   // Combine backend events + prototype events + custom items (memoized)
   const allEvents = useMemo(() => {
@@ -138,13 +153,13 @@ export default function CalendarPage() {
     return map;
   }, [filteredEvents]);
 
-  // Tasks for Action Checklist (right panel)
+  // Tasks for Action Checklist (right panel) — strictly scoped to selectedDate
   const checklistTasks = useMemo(() => {
     return filteredEvents
       .filter((e) => {
         const isTask = e.activity_type === "Task" || e.metric_target !== undefined;
         const eDate = keyOf(e.start_at);
-        return isTask && (eDate === selectedDate || e.all_day);
+        return isTask && eDate === selectedDate;
       })
       .sort((a, b) => {
         if (a.status === "Completed" && b.status !== "Completed") return 1;
@@ -188,24 +203,57 @@ export default function CalendarPage() {
     }).catch(() => {});
   }, []);
 
-  // Instant local task creation
-  const handleAddChecklistTask = useCallback((taskData) => {
+  // Persist new checklist task to backend with defined timeframe
+  const handleAddChecklistTask = useCallback(async (taskData) => {
+    const due = taskData.due_time || "";
+    const tempId = `task-${Date.now()}`;
     const newTask = {
-      id: `task-${Date.now()}`,
+      id: tempId,
       title: taskData.title,
       activity_type: "Task",
       priority: taskData.priority || "High",
+      due_time: due,
+      timeframe: taskData.timeframe || (due ? `${selectedDate} ${due}` : ""),
       metric_target: taskData.metric_target,
       metric_current: taskData.metric_current,
-      start_at: `${selectedDate}T${taskData.due_time || "17:00"}:00+05:30`,
-      end_at: `${selectedDate}T${taskData.due_time || "17:30"}:00+05:30`,
+      start_at: `${selectedDate}T${due || "17:00"}:00+05:30`,
+      end_at: `${selectedDate}T${due || "17:30"}:00+05:30`,
       all_day: false,
       status: "Planned",
       visibility: "PRIVATE",
     };
 
     setCustomTasks((prev) => [newTask, ...prev]);
-    api.post("/calendar/events", newTask).catch(() => {});
+    try {
+      const r = await api.post("/calendar/events", newTask);
+      if (r.data?.id) {
+        setCustomTasks((prev) => prev.filter((x) => x.id !== tempId));
+        setBackendEvents((prev) => [r.data, ...prev]);
+      }
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }, [selectedDate]);
+
+  const handleSubmitTaskProgress = useCallback(async (tasksPayload) => {
+    setSubmittingTasks(true);
+    setSubmitTaskError("");
+    try {
+      const r = await api.post("/calendar/tasks/submit", {
+        date: selectedDate,
+        tasks: tasksPayload,
+      });
+      setSubmissionData({ latest: r.data.latest, history: r.data.history || [] });
+      toast.success(
+        `Submitted ${r.data.latest.completed_tasks}/${r.data.latest.total_tasks} tasks (${r.data.latest.completion_pct}%)`
+      );
+    } catch (e) {
+      const msg = errMsg(e);
+      setSubmitTaskError(msg);
+      toast.error(msg);
+    } finally {
+      setSubmittingTasks(false);
+    }
   }, [selectedDate]);
 
   // Fast date selection
@@ -414,9 +462,13 @@ export default function CalendarPage() {
             <ActionChecklist
               tasks={checklistTasks}
               selectedDate={selectedDate}
+              submissionData={submissionData}
+              submitting={submittingTasks}
+              submitError={submitTaskError}
               onToggleComplete={handleToggleComplete}
               onUpdateMetric={handleUpdateMetric}
               onAddTask={handleAddChecklistTask}
+              onSubmitProgress={handleSubmitTaskProgress}
             />
           </div>
         </div>
