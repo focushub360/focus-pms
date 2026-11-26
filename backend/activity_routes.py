@@ -117,6 +117,7 @@ class EventIn(BaseModel):
     calendar_date: Optional[str] = None
     metric_target: Optional[int] = None
     metric_current: Optional[int] = None
+    target_note: Optional[str] = None
     assigned_to: Optional[str] = None
     attendee_ids: list[str] = Field(default_factory=list)
     location: str = ""
@@ -265,6 +266,7 @@ class TaskSubmitItemIn(BaseModel):
     description: str = Field(min_length=1, max_length=300)
     timeframe: Optional[str] = None
     priority: str = "Normal"
+    target_note: Optional[str] = None
     completed: bool = False
 
 
@@ -351,6 +353,7 @@ async def submit_daily_task_progress(
                 "description": t.description.strip(),
                 "timeframe": (t.timeframe or "").strip(),
                 "priority": t.priority or "Normal",
+                "target_note": (t.target_note or "").strip() or None,
                 "completed": bool(t.completed),
             }
             for t in valid_tasks

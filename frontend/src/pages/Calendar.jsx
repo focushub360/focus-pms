@@ -226,6 +226,8 @@ export default function CalendarPage() {
       timeframe: taskData.timeframe || (dueTime ? `${dueDate} ${dueTime}` : ""),
       metric_target: taskData.metric_target,
       metric_current: taskData.metric_current,
+      target_note: taskData.target_note || null,
+      notes: taskData.notes || taskData.target_note || "",
       start_at: `${selectedDate}T${dueTime || "17:00"}:00+05:30`,
       end_at: `${endDate}T${dueTime || "17:00"}:00+05:30`,
       all_day: false,

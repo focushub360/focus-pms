@@ -78,11 +78,15 @@ export default function ActionChecklist({
       setFormErr("A timeframe (due date and time) is required for submission eligibility.");
       return;
     }
+    const trimmedTarget = newTarget.trim();
+    const isNumericTarget = /^[1-9]\d*$/.test(trimmedTarget);
     onAddTask({
       title: newTitle.trim(),
       priority: newPriority,
-      metric_target: newTarget ? Number(newTarget) : null,
-      metric_current: newTarget ? 0 : null,
+      metric_target: isNumericTarget ? Number(trimmedTarget) : null,
+      metric_current: isNumericTarget ? 0 : null,
+      target_note: trimmedTarget || null,
+      notes: trimmedTarget || "",
       due_date: newDueDate.trim(),
       due_time: newDueTime.trim(),
       timeframe: `${newDueDate.trim()} ${newDueTime.trim()}`,
@@ -105,6 +109,7 @@ export default function ActionChecklist({
         description: t.title,
         timeframe: getTaskTimeframe(t),
         priority: t.priority || "Normal",
+        target_note: t.target_note || null,
         completed: t.status === "Completed",
       }))
     );
@@ -176,8 +181,21 @@ export default function ActionChecklist({
               />
             </div>
           </div>
-          <div className="grid grid-cols-[96px_1fr_auto] items-end gap-1.5 text-xs">
-            <div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              Target / Comment (optional)
+            </label>
+            <textarea
+              rows={2}
+              placeholder="Enter target, deliverables, or comments (text or numbers)..."
+              value={newTarget}
+              onChange={(e) => setNewTarget(e.target.value)}
+              className="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-[#007AFF] resize-y"
+              data-testid="checklist-new-target"
+            />
+          </div>
+          <div className="flex items-end justify-between gap-2 text-xs">
+            <div className="flex-1 max-w-[130px]">
               <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">Priority</label>
               <select
                 value={newPriority}
@@ -190,17 +208,9 @@ export default function ActionChecklist({
                 <option value="Low">Low</option>
               </select>
             </div>
-            <input
-              type="number"
-              min="1"
-              placeholder="Target (opt.)"
-              value={newTarget}
-              onChange={(e) => setNewTarget(e.target.value)}
-              className="w-full px-2 py-1 text-[11px] rounded-lg border border-slate-300 bg-white text-slate-900"
-            />
             <button
               type="submit"
-              className="px-3 py-1 rounded-lg bg-[#007AFF] hover:bg-blue-600 text-white font-semibold text-[11px] transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-[#007AFF] hover:bg-blue-600 text-white font-semibold text-[11px] transition-all cursor-pointer"
               data-testid="checklist-save-task"
             >
               Save
@@ -344,9 +354,16 @@ export default function ActionChecklist({
                           </button>
                         )
                       ) : (
-                        <span className={`text-[11px] font-medium ${isCompleted ? "text-emerald-600" : "text-slate-500"}`}>
-                          {isCompleted ? "Completed" : "Open"}
-                        </span>
+                        <div className="space-y-1.5">
+                          {(t.target_note || "").trim() && (
+                            <p className="text-[11px] text-slate-600 bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1 break-words">
+                              {t.target_note}
+                            </p>
+                          )}
+                          <span className={`inline-block text-[11px] font-medium ${isCompleted ? "text-emerald-600" : "text-slate-500"}`}>
+                            {isCompleted ? "Completed" : "Open"}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
