@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, errMsg, hasAnyPerm, hasPerm } from "@/lib/api";
+import { api, errMsg, hasPerm } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Panel } from "@/components/dash/ui";
 import ScorecardTab from "@/components/targets/ScorecardTab";
 import SalesTargetsTab from "@/components/targets/SalesTargetsTab";
 import AssignmentsTab from "@/components/targets/AssignmentsTab";
 import LibraryTab from "@/components/targets/LibraryTab";
-import CommandCenter from "@/pages/CommandCenter";
+// import CommandCenter from "@/pages/CommandCenter";
 import { toast } from "sonner";
 
 function ThresholdsTab() {
@@ -44,17 +44,17 @@ export default function Targets() {
   const [params, setParams] = useSearchParams();
   const [employees, setEmployees] = useState([]);
   const canConfig = hasPerm(user, "TARGETS_CONFIGURE");
-  const canCommandCenter = hasAnyPerm(user, ["MANAGEMENT_BOARD_VIEW", "HOD_VIEW", "SYSTEM_ADMIN", "MIS_REPORT_VIEW"]);
+  // const canCommandCenter = hasAnyPerm(user, ["MANAGEMENT_BOARD_VIEW", "HOD_VIEW", "SYSTEM_ADMIN", "MIS_REPORT_VIEW"]);
   const tabs = [
     { id: "scorecard", label: "KPI Scorecard" },
-    ...(canCommandCenter ? [{ id: "command-center", label: "Command Center" }] : []),
+    // ...(canCommandCenter ? [{ id: "command-center", label: "Command Center" }] : []),
     { id: "targets", label: "Sales Targets" },
     ...(canConfig ? [{ id: "assignments", label: "KPI Assignments" }] : []),
     { id: "library", label: "KPI Library" },
     { id: "settings", label: "Thresholds" },
   ];
   const tab = tabs.find((t) => t.id === params.get("tab"))?.id || "scorecard";
-  useEffect(() => { api.get("/meta/employees").then((r) => setEmployees(r.data)).catch(() => {}); }, []);
+  useEffect(() => { api.get("/meta/employees").then((r) => setEmployees(r.data)).catch(() => { }); }, []);
 
   return (
     <div className="space-y-5" data-testid="targets-page">
@@ -69,7 +69,7 @@ export default function Targets() {
         ))}
       </div>
       {tab === "scorecard" && <ScorecardTab employees={employees} />}
-      {tab === "command-center" && <CommandCenter embedded />}
+      {/* {tab === "command-center" && <CommandCenter embedded />} */}
       {tab === "targets" && <SalesTargetsTab employees={employees} />}
       {tab === "assignments" && employees.length > 0 && <AssignmentsTab employees={employees} />}
       {tab === "library" && <LibraryTab />}

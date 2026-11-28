@@ -17,7 +17,7 @@ const NAV = [
   { to: "/app/accounts", label: "Accounts", icon: Building2, perms: ["SALES_ACCOUNT_MANAGE"] },
   { to: "/app/campaigns", label: "Marketing", icon: Megaphone, perms: ["MARKETING_CAMPAIGN_MANAGE", "MARKETING_REPORT_VIEW"] },
   { to: "/app/calendar", label: "Calendar & Activities", icon: CalendarDays, perms: null },
-  { to: "/app/daily-activity", label: "Daily Activity", icon: ClipboardList, perms: null },
+  // { to: "/app/daily-activity", label: "Daily Activity", icon: ClipboardList, perms: null },
   { to: "/app/reports", label: "Reports & Analytics", icon: BarChart3, perms: null },
   { to: "/app/targets", label: "Targets & KPIs", icon: Target, perms: ["TARGETS_VIEW", "TARGETS_CONFIGURE", "MANAGEMENT_BOARD_VIEW", "HOD_VIEW", "MIS_REPORT_VIEW"] },
   { to: "/app/users", label: "User & Access", icon: UserPlus, perms: ["USER_ONBOARDING_ADMIN", "USER_VIEW"] },
@@ -70,7 +70,7 @@ export default function Shell({ children }) {
   const bottomNavItems = [
     { to: "/app/dashboard", label: "Dash", icon: LayoutDashboard },
     { to: "/app/opportunities", label: "Opps", icon: TrendingUp },
-    { to: "/app/daily-activity", label: "Daily", icon: ClipboardList },
+    // { to: "/app/daily-activity", label: "Daily", icon: ClipboardList },
     { to: "/app/calendar", label: "Calendar", icon: CalendarDays },
   ];
 

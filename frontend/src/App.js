@@ -36,7 +36,7 @@ function AppShellRoutes() {
     <Shell>
       <Routes>
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="command-center" element={<Navigate to="/app/targets?tab=command-center" replace />} />
+        <Route path="command-center" element={<Navigate to="/app/dashboard" replace />} />
         <Route path="opportunities" element={<Opportunities />} />
         <Route path="projects" element={<Projects />} />
         <Route path="leads" element={<Leads />} />
